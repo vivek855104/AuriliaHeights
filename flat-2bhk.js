@@ -407,7 +407,9 @@ function buildFlat(api,unit){
     const w=ap(q[0],q[1]);p.position.set(w[0],RH-.15,w[1]);S.add(p);pts.push(p);});
   const hem=new THREE.HemisphereLight(0xe2eef6,0x8a7656,.42);S.add(hem);
   S.environment=api.ENV();S.environmentIntensity=.35;
+  let dh=false,lastLight=null;
   S.userData.apply=(a,b,f)=>{
+    lastLight=[a,b,f];
     const n=k=>a[k]+(b[k]-a[k])*f;
     sun.color.copy(a.rSun).lerp(b.rSun,f);sun.intensity=n('rSunI');
     [skyFill,sideFill,sideFill2].forEach((l,i)=>{l.color.copy(a.rFill).lerp(b.rFill,f);l.intensity=n('rFillI')*(i?.75:1.3);});
@@ -415,7 +417,11 @@ function buildFlat(api,unit){
     const k=n('rInt');pts.forEach(p=>p.intensity=p.userData.base*k);
     shade.emissiveIntensity=n('rShade');ledM.emissiveIntensity=.4+n('rShade')*1.4;downM.emissiveIntensity=.6+n('rShade')*1.8;
     const sk=S.userData.sky;sk.uniforms.t.value.copy(a.skyT).lerp(b.skyT,f);sk.uniforms.h.value.copy(a.skyH).lerp(b.skyH,f);
-    S.fog.color.copy(a.fog).lerp(b.fog,f);};
+    S.fog.color.copy(a.fog).lerp(b.fog,f);
+    /* Dollhouse: a stronger high key light for crisp wall shadows, brighter room lamps so each room glows at night,
+       a fuller sky fill and stronger environment reflections on the floors, marble and glass */
+    if(dh){sun.intensity*=1.2;hem.intensity*=1.15;S.environmentIntensity*=1.35;
+      pts.forEach(p=>p.intensity*=2.4);}};
 
   /* ── viewpoints, one per room: [camera position], [where it looks], field of view ── */
   S.userData.views={
@@ -434,13 +440,32 @@ function buildFlat(api,unit){
      corner, the same distance-to-size and ~40 degree elevation as the owner's favourite Pool Deck shot */
   S.userData.views=Object.assign({Dollhouse:{p:[-12.5,17,14.5],t:[0,.4,-1.2],fov:40,orbit:true}},S.userData.views);
   /* switching the Dollhouse on lifts the ceiling, cuts the walls, hides the outside world and sets a studio backdrop */
-  const plane=new THREE.Plane(new THREE.Vector3(0,-1,0),CUT),studio=new THREE.Color(0x2e2b27);let saved=null;
+  const plane=new THREE.Plane(new THREE.Vector3(0,-1,0),CUT);let saved=null;
+  /* studio backdrop: a soft warm vignette (one small texture), and a shadow catcher under the flat so it sits on
+     the ground like a model on a table instead of floating */
+  const studio=(()=>{const[c,x]=cnv(512),g=x.createRadialGradient(256,230,20,256,256,380);
+    g.addColorStop(0,'#4a453d');g.addColorStop(.55,'#2c2924');g.addColorStop(1,'#171512');x.fillStyle=g;x.fillRect(0,0,512,512);
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;owned.push(t);return t;})();
+  const catcher=new THREE.Mesh(new THREE.PlaneGeometry(60,60),own(new THREE.ShadowMaterial({opacity:.38,color:0x0a0806})));
+  catcher.rotation.x=-PI/2;catcher.position.set(0,-.17,-1);catcher.receiveShadow=true;catcher.visible=false;S.add(catcher);
+  const C0=new THREE.Vector3(0,0,-1);
   S.userData.dollhouse=(on,renderer)=>{
-    if(on&&!saved){saved={bg:S.background,near:S.fog.near,far:S.fog.far};
-      outside.forEach(o=>o.visible=false);if(caps)caps.visible=true;
-      S.background=studio;S.fog.near=1e4;S.fog.far=1e5;renderer.clippingPlanes=[plane];}
-    else if(!on&&saved){outside.forEach(o=>o.visible=true);if(caps)caps.visible=false;
-      S.background=saved.bg;S.fog.near=saved.near;S.fog.far=saved.far;renderer.clippingPlanes=[];saved=null;}};
+    if(on&&!saved){saved={bg:S.background,near:S.fog.near,far:S.fog.far,sp:sun.position.clone(),st:sun.target.position.clone(),
+        sr:sun.shadow.radius,py:pts.map(p=>p.position.y),pd:pts.map(p=>p.distance)};
+      outside.forEach(o=>o.visible=false);if(caps)caps.visible=true;catcher.visible=true;
+      S.background=studio;S.fog.near=1e4;S.fog.far=1e5;renderer.clippingPlanes=[plane];
+      /* key light from high over the far corner, opposite the camera: walls and furniture throw soft shadows
+         across the floors toward the viewer, and the flat casts one onto the ground */
+      sun.position.copy(C0).add(new THREE.Vector3(9,13,-5));sun.target.position.copy(C0);sun.shadow.radius=6;
+      /* room lamps drop below the cut so their pools of light read from above */
+      pts.forEach(p=>{p.position.y=CUT-.35;p.distance=8;});
+      dh=true;}
+    else if(!on&&saved){outside.forEach(o=>o.visible=true);if(caps)caps.visible=false;catcher.visible=false;
+      S.background=saved.bg;S.fog.near=saved.near;S.fog.far=saved.far;renderer.clippingPlanes=[];
+      sun.position.copy(saved.sp);sun.target.position.copy(saved.st);sun.shadow.radius=saved.sr;
+      pts.forEach((p,i)=>{p.position.y=saved.py[i];p.distance=saved.pd[i];});
+      dh=false;saved=null;}
+    if(lastLight)S.userData.apply(...lastLight);};
   return S;
 }
 window.AureliaFlat={buildFlat};

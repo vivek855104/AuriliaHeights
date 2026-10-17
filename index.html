@@ -93,10 +93,10 @@ body.intro .lbl{opacity:0;pointer-events:none}
 html:lang(hi) *,html:lang(mr) *{letter-spacing:normal!important}
 /* the small tracked capitals become readable Devanagari sizes */
 html:lang(hi) :is(#ptitle,.eyebrow,.kpi span,.kpi em,.chips>span:first-child,#pc h2,.facts dt,.spec dt,.flr span,.item.tw .figs span,
-  .lbl span,#tod-label,.k-tag,#crest span,.crumb,.chip),
+  .lbl span,#tod-label,.ld-kind,#crest span,.crumb,.chip),
 html:lang(mr) :is(#ptitle,.eyebrow,.kpi span,.kpi em,.chips>span:first-child,#pc h2,.facts dt,.spec dt,.flr span,.item.tw .figs span,
-  .lbl span,#tod-label,.k-tag,#crest span,.crumb,.chip){font-size:12px;text-transform:none}
-html:lang(hi) .k-sub,html:lang(mr) .k-sub{font-size:13px;text-transform:none}
+  .lbl span,#tod-label,.ld-kind,#crest span,.crumb,.chip){font-size:12px;text-transform:none}
+html:lang(hi) .ld-sub,html:lang(mr) .ld-sub{font-size:13px;text-transform:none;letter-spacing:normal}
 #tod{margin-left:0;padding:10px 18px 12px;border-radius:12px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
 #tod-label{font:500 8.5px/1 var(--f-ui);letter-spacing:.32em;text-transform:uppercase;color:var(--champ);text-align:center;transition:color .4s}
 #tod .row{display:flex;align-items:center;gap:12px}
@@ -255,52 +255,32 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
 
 /* ── loading and fallback ── */
 #fade{position:fixed;inset:0;background:#07090a;opacity:0;pointer-events:none;transition:opacity .45s;z-index:5}
-#load{position:fixed;inset:0;z-index:9;background:#0a0a0a;color:var(--ink);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:20px;transition:opacity .7s}
-#load>*,#visit>*{position:relative;z-index:1}
-/* colour-coded stages: each loading word has its own tone, which tints the tag, the progress line, the mirrored echo
-   and a soft glow behind the type. Nothing is drawn per frame; the tone simply fades between stages */
-@property --stage{syntax:'<color>';inherits:true;initial-value:#d8b98a}
-#load,#visit{--stage:#d8b98a;transition:opacity .7s,--stage 1.2s ease}
-#load[data-stage="Materials"]{--stage:#d9825b}
-#load[data-stage="Landscape"]{--stage:#8fb87e}
-#load[data-stage="Welcome"],#visit{--stage:#e3bd63}
-#load:after,#visit:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 46% 34% at 50% 50%,color-mix(in srgb,var(--stage) 16%,transparent),transparent 75%)}
-/* kinetic loading type: one condensed word per stage, sliding through a mask with a faint mirrored echo.
-   Only transform and opacity animate, so the motion stays smooth while the scene is being built */
-#kin,.kin{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
-.k-tag{font:500 11px/1 "Oswald",var(--f-ui);letter-spacing:.5em;text-transform:uppercase;color:var(--stage,var(--champ));opacity:.85;margin-left:.2em}
-.k-row{position:relative;font:600 clamp(48px,8.5vw,92px)/1 "Oswald",var(--f-ui);letter-spacing:.015em;text-transform:uppercase}
-.k-mask{display:grid;overflow:hidden;padding:.04em 0;min-width:5.2em}
-.k-word{grid-area:1/1;color:#ece4d3;white-space:nowrap;text-shadow:0 2px 30px rgba(10,10,10,.7)}
-.k-word.in{animation:kIn 1s cubic-bezier(.2,.8,.2,1) both}
-.k-word.out{animation:kOut .7s cubic-bezier(.6,0,.8,.4) forwards}
-@keyframes kIn{from{transform:translateX(55%) skewX(-14deg);opacity:0}to{transform:none;opacity:1}}
-@keyframes kOut{to{transform:translateX(-55%) skewX(14deg);opacity:0}}
-.k-echo-wrap{position:absolute;left:100%;top:.42em;margin-left:-.08em;font-size:.42em;animation:kDrift 6s ease-in-out infinite alternate}
-.k-echo{display:block;white-space:nowrap;color:var(--stage,var(--champ));opacity:.28;transform:scaleX(-1)}
-.k-echo.in{animation:kEcho 1.1s cubic-bezier(.2,.8,.2,1) both}
-@keyframes kEcho{from{transform:scaleX(-1) translateX(40%);opacity:0}to{transform:scaleX(-1);opacity:.2}}
-@keyframes kDrift{to{transform:translateX(.4em)}}
-.k-name{font:400 15px/1 var(--f-disp);letter-spacing:.02em;color:var(--ink2);margin-left:.1em}
-.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-@media(max-width:520px){.k-echo-wrap{display:none}.k-alts{position:static;height:auto;flex-direction:row;gap:14px;margin:8px 0 0}#lang button{min-width:30px;padding:9px 6px}}
-#bar,.vbar{width:min(220px,60vw);height:1px;background:rgba(211,191,151,.16);overflow:hidden}
-#bar i,.vbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,color-mix(in srgb,var(--stage,var(--gold2)) 60%,#000),var(--stage,var(--champ)));transition:width .3s}
-.vbar i{transition:width 2.4s cubic-bezier(.3,.6,.2,1)}
-/* "Welcome" in the other two languages, stacked beside the word around its mirrored echo */
-.k-alts{position:absolute;left:100%;top:-.1em;height:1.22em;margin-left:-.06em;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
-.k-alts span{display:block;font-size:.3em;line-height:1;white-space:nowrap;color:#ece4d3;opacity:0;font-family:"Noto Sans Devanagari","Oswald",var(--f-ui);font-weight:600;text-transform:none}
-.k-alts span:last-child{color:var(--champ)}
-.k-alts.show span{animation:kAlt .9s cubic-bezier(.2,.8,.2,1) .15s forwards}
-.k-alts.show span:last-child{animation-delay:.35s}
-@keyframes kAlt{from{transform:translateX(45%);opacity:0}to{transform:none;opacity:.85}}
-.k-sub{font:400 11px/1.5 var(--f-ui);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-left:.15em;opacity:0;animation:kSub .8s ease .6s forwards}
-@keyframes kSub{to{opacity:1}}
-/* the visit screen: the same flow field and kinetic type, shown while a sample flat is prepared */
-#visit{position:fixed;inset:0;z-index:8;background:#0a0a0a;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s}
+/* loading screens: a quiet wordmark on near-black. Everything that moves animates only transform or opacity, so
+   the phone's compositor keeps it smooth even while the page is busy building the scene; the script only nudges the
+   progress line, and nothing else changes during loading */
+#load,#visit{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 80% at 50% 45%,#16130e 0%,#0b0a08 60%,#070605 100%);color:var(--ink);transition:opacity .7s ease}
+#visit{z-index:8;opacity:0;transition:opacity .5s ease}
 #visit.on{opacity:1}
+.ld{display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px;animation:ldIn 1.1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes ldIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ld-mark{width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--gold);margin-bottom:26px;animation:ldBreath 2.8s ease-in-out infinite}
+@keyframes ldBreath{0%,100%{opacity:.35}50%{opacity:1}}
+.ld-kind{font:500 10px/1 var(--f-ui);letter-spacing:.42em;text-transform:uppercase;color:var(--champ);margin:0 0 14px .42em}
+.ld-name{font:400 clamp(34px,6vw,54px)/1.05 var(--f-disp);letter-spacing:-.01em;color:#f2ead9;margin:0}
+.ld-line{position:relative;width:min(200px,52vw);height:1px;margin:30px 0 22px;background:rgba(211,191,151,.16);overflow:hidden}
+.ld-line i{position:absolute;inset:0;background:linear-gradient(90deg,var(--gold2),var(--champ));transform-origin:left;transform:scaleX(0);
+  transition:transform .9s cubic-bezier(.3,.6,.2,1)}
+.ld-sub{min-height:1.5em;font:400 11px/1.5 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.ld-hello{display:flex;gap:14px;align-items:center;justify-content:center;font:400 15px/1.4 var(--f-disp);color:var(--ink2);opacity:0;transition:opacity .9s ease}
+.ld-hello b{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.7}
+.ld.done .ld-hello{opacity:1}
+.ld.done .ld-sub{display:none}
+#visit .ld-sub{opacity:0;animation:ldFade .8s ease .5s forwards}
+@keyframes ldFade{to{opacity:1}}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.ld-mark{animation:none;opacity:.8}}
+@media(max-width:520px){#lang button{min-width:30px;padding:9px 6px}}
 #oops{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;
   padding:28px;text-align:center;background:#0d110f;color:var(--ink);font-size:15px;line-height:1.6}
 
@@ -361,21 +341,19 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
 </aside>
 <button id="popen" class="glass" aria-label="Show project panel"><svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg><span>Homes</span></button>
 <div id="fade"></div>
-<div id="load" data-stage="Structure">
-  <div id="kin">
-    <div class="k-tag">Loading</div>
-    <div class="k-row"><div class="k-mask" id="kmask"><span class="k-word in">Structure</span></div>
-      <div class="k-echo-wrap" aria-hidden="true"><span class="k-echo" id="kecho">Structure</span></div>
-      <div class="k-alts" id="kalts" aria-hidden="true"></div></div>
-    <div id="bar"><i></i></div>
-    <div class="k-name">Aurelia Heights</div>
-  </div><small id="lmsg" class="sr">Loading</small></div>
+<div id="load"><div class="ld" role="status" aria-live="polite">
+  <span class="ld-mark" aria-hidden="true"></span>
+  <div class="ld-kind" id="ld-kind">Residences</div>
+  <h3 class="ld-name">Aurelia Heights</h3>
+  <div class="ld-line"><i id="bar"></i></div>
+  <div class="ld-sub" id="lmsg">Loading</div>
+  <div class="ld-hello" id="ld-hello" aria-hidden="true"></div></div></div>
 <script>
 /* the loading screen speaks the chosen language from the first frame */
 (function(){const t=s=>AH.tr(s);
-  document.querySelector('#kin .k-tag').textContent=t('Loading');
-  document.querySelector('#kmask .k-word').textContent=t('Structure');document.getElementById('kecho').textContent=t('Structure');
-  document.getElementById('kalts').innerHTML=['en','hi','mr'].filter(l=>l!==AH.lang).map(l=>'<span lang="'+l+'">'+AH.tr('Welcome',l)+'</span>').join('');
+  document.getElementById('ld-kind').textContent=t('Residences');
+  document.getElementById('lmsg').textContent=t('Loading');
+  document.getElementById('ld-hello').innerHTML=['en','hi','mr'].map(l=>'<span lang="'+l+'">'+AH.tr('Welcome',l)+'</span>').join('<b></b>');
   document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.l===AH.lang)));})();
 </script>
 <script type="text/plain" id="flow-src">
@@ -644,7 +622,10 @@ function flowRenderer(canvas, w0, h0, dpr, raf, count) {
 (function(){
   const src=document.getElementById('flow-src').textContent,W=400,H=280,N=420,D=2;
   const done=blob=>document.documentElement.style.setProperty('--flow-art',`url("${URL.createObjectURL(blob)}")`);
-  const steps=`function freeze(c){let q=null;flowRenderer(c,${W},${H},${D},f=>{q=f;});
+  /* drawn on the processor, not the graphics chip (willReadFrequently keeps the canvas in software): hundreds of
+     frames rasterised on an integrated GPU at load time starved the 3D scene of its WebGL context */
+  const steps=`function freeze(c){const g=c.getContext.bind(c);c.getContext=(t,o)=>g(t,Object.assign({willReadFrequently:true},o));
+    let q=null;flowRenderer(c,${W},${H},${D},f=>{q=f;});
     for(let i=0;i<${N};i++){const f=q;q=null;if(f)f();}}`;
   if(window.Worker&&window.OffscreenCanvas&&OffscreenCanvas.prototype.convertToBlob){
     try{
@@ -747,21 +728,16 @@ const homes=b=>b.floors*b.perFloor;
 const unitPrice=(t,floor)=>Math.round(TYPES[t].price*(1+.006*(floor-1))/1e4)*1e4;
 
 /* ═══════════════ progress ═══════════════ */
-const bar=document.querySelector('#bar i'), lmsg=document.getElementById('lmsg');
+const bar=document.getElementById('bar'), lmsg=document.getElementById('lmsg');
 /* the build reports many small steps; the loading screen shows only four words for them */
-const kmask=document.getElementById('kmask'),kecho=document.getElementById('kecho');
 const tl=s=>AH.tr(s);                      // the visible text for an English key, in the chosen language
 const loadWord=p=>p>=1?'Welcome':p>=.74?'Landscape':p>=.46?'Materials':'Structure';
-function swapWord(w){
-  const cur=kmask&&kmask.querySelector('.k-word:not(.out)');
-  if(!cur||(cur.dataset.k||'Structure')===w)return;
-  cur.classList.remove('in');cur.classList.add('out');setTimeout(()=>cur.remove(),800);
-  const n=document.createElement('span');n.className='k-word in';n.dataset.k=w;n.textContent=tl(w);kmask.appendChild(n);
-  kecho.textContent=tl(w);kecho.classList.remove('in');void kecho.offsetWidth;kecho.classList.add('in');
-  if(w==='Welcome'){const a=document.getElementById('kalts');if(a)a.classList.add('show');}
-  const ld=document.getElementById('load');if(ld)ld.dataset.stage=w;
+let lastWord='';
+function stageCaption(p){
+  const w=loadWord(p);if(w===lastWord)return;lastWord=w;
+  if(w==='Welcome'){document.querySelector('#load .ld').classList.add('done');return;}
   lmsg.textContent=tl(w);}
-const step=(m,p)=>{bar.style.width=(p*100)+'%';swapWord(loadWord(p));
+const step=(m,p)=>{bar.style.transform='scaleX('+p+')';stageCaption(p);
   return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));};
 
 /* ═══════════════ texture lab ═══════════════ */
@@ -2480,17 +2456,15 @@ let visitEl=null;
 function showVisit(title){
   if(visitEl)return;
   const v=document.createElement('div');v.id='visit';
-  const others=['en','hi','mr'].filter(l=>l!==AH.lang);
-  v.innerHTML=`<div class="kin" role="status">
-    <div class="k-tag">${tl('Entering')}</div>
-    <div class="k-row"><div class="k-mask"><span class="k-word in">${tl('Welcome')}</span></div>
-      <div class="k-echo-wrap" aria-hidden="true"><span class="k-echo in">${tl('Welcome')}</span></div>
-      <div class="k-alts show" aria-hidden="true">${others.map(l=>`<span lang="${l}">${AH.tr('Welcome',l)}</span>`).join('')}</div></div>
-    <div class="vbar"><i></i></div><div class="k-name">${title}</div>
-    <div class="k-sub">${tl('Taking you to the real experience')}</div></div>`;
+  v.innerHTML=`<div class="ld" role="status" aria-live="polite">
+    <span class="ld-mark" aria-hidden="true"></span>
+    <div class="ld-kind">${tl('Entering')}</div>
+    <h3 class="ld-name">${title}</h3>
+    <div class="ld-line"><i></i></div>
+    <div class="ld-sub">${tl('Taking you to the real experience')}</div></div>`;
   document.body.appendChild(v);
   v._stop=()=>{};v._t=performance.now();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{v.classList.add('on');v.querySelector('.vbar i').style.width='100%';}));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{v.classList.add('on');const i=v.querySelector('.ld-line i');i.style.transition='transform 2.4s cubic-bezier(.3,.6,.2,1)';i.style.transform='scaleX(1)';}));
   visitEl=v;}
 function hideVisit(now){
   const v=visitEl;if(!v)return;visitEl=null;

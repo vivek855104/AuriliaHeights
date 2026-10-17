@@ -1,5 +1,6 @@
 /* Aurelia Heights: the full 2 BHK sample flat, walked room by room.
-   Loaded on demand (dynamic import) the first time a 2 BHK flat is opened, so the site never pays for it otherwise.
+   Loaded on demand (a plain <script> tag, so it also works when index.html is opened straight from disk) the first
+   time a 2 BHK flat is opened, so the site never pays for it otherwise. It registers window.AureliaFlat.buildFlat.
    Every static piece is collected per material and merged into one mesh each, which keeps the whole flat to a few
    dozen draw calls. The shared materials, helpers, the view outside and the time-of-day hooks come from the page
    through `api`, so nothing here is duplicated.
@@ -13,10 +14,9 @@
             │ Kitchen  │                 │  Foyer   │   entry door in the foyer's back wall
      z -5.0 └──────────┴─────────────────┴──────────┘
            x -6      -2.4               2.4         6                                                      */
-import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-
-export function buildFlat(api,unit){
-  const {THREE,M,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,LOW,Z1,RH}=api;
+(function(){
+function buildFlat(api,unit){
+  const {THREE,mergeGeometries,M,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,LOW,Z1,RH}=api;
   const PI=Math.PI,S=new THREE.Scene(),owned=S.userData.owned=[];
   const own=m=>{owned.push(m);return m;};
   const G=new THREE.Group();S.add(G);
@@ -392,3 +392,5 @@ export function buildFlat(api,unit){
     View:{p:[.3,1.75,Z1+1.74],t:[.6,-1.6,Z1+4.4],fov:46}};
   return S;
 }
+window.AureliaFlat={buildFlat};
+})();

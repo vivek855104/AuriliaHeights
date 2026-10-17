@@ -2438,17 +2438,20 @@ function enterBuilding(id){
   limits('free');fly(v.p,v.t,1.5,40,()=>limits('building'));
   paint();
 }
-/* 2 BHK flats are a complete home in their own module, fetched the first time one is opened; the shared
+/* 2 BHK flats are a complete home in their own file, fetched with a plain script tag the first time one is opened
+   (module imports are blocked when the page is opened straight from disk); the shared
    materials, helpers, the view outside and the time-of-day hooks are handed over through this API */
 let flatMod=null;
-const FLAT_API={THREE,M,LOW,Z1,RH,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,ENV:()=>ENV};
+const FLAT_API={THREE,mergeGeometries,M,LOW,Z1,RH,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,ENV:()=>ENV};
 const fullFlat=t=>t==='bhk2';
 function enterRoom(no){
   const r=curB.rooms.find(x=>x[0]===no); if(!r) return;
   if(fullFlat(r[1])&&!flatMod){
     document.body.style.cursor='progress';
-    import('./flat-2bhk.js').then(m=>{flatMod=m;document.body.style.cursor='';enterRoom(no);})
-      .catch(err=>{console.error(err);document.body.style.cursor='';});
+    const sc=document.createElement('script');sc.src='flat-2bhk.js';
+    sc.onload=()=>{document.body.style.cursor='';if(window.AureliaFlat){flatMod=window.AureliaFlat;enterRoom(no);}};
+    sc.onerror=()=>{document.body.style.cursor='';sc.remove();console.error('Could not load flat-2bhk.js');};
+    document.head.appendChild(sc);
     return;}
   fade(()=>{
     curRoom={no:r[0],type:r[1],floor:r[2],side:r[3],b:curB};

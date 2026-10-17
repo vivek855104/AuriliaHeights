@@ -2438,11 +2438,22 @@ function enterBuilding(id){
   limits('free');fly(v.p,v.t,1.5,40,()=>limits('building'));
   paint();
 }
+/* 2 BHK flats are a complete home in their own module, fetched the first time one is opened; the shared
+   materials, helpers, the view outside and the time-of-day hooks are handed over through this API */
+let flatMod=null;
+const FLAT_API={THREE,M,LOW,Z1,RH,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,ENV:()=>ENV};
+const fullFlat=t=>t==='bhk2';
 function enterRoom(no){
   const r=curB.rooms.find(x=>x[0]===no); if(!r) return;
+  if(fullFlat(r[1])&&!flatMod){
+    document.body.style.cursor='progress';
+    import('./flat-2bhk.js').then(m=>{flatMod=m;document.body.style.cursor='';enterRoom(no);})
+      .catch(err=>{console.error(err);document.body.style.cursor='';});
+    return;}
   fade(()=>{
     curRoom={no:r[0],type:r[1],floor:r[2],side:r[3],b:curB};
-    if(roomKey!==no){ if(room) disposeRoom(room); room=buildRoom(curRoom); roomKey=no; }
+    if(roomKey!==no){ if(room) disposeRoom(room);
+      room=fullFlat(curRoom.type)?flatMod.buildFlat(FLAT_API,curRoom):buildRoom(curRoom); roomKey=no; }
     mode='room';active=room;applyLight(todK);
     if(renderPass) renderPass.scene=room;
     limits('room');tween=null;controls.enabled=true;
@@ -2462,8 +2473,9 @@ function exitRoom(){
   });
 }
 /* the look-down view stands at the rail, which on a penthouse terrace is further out */
+const roomViews=()=>(room&&room.userData.views)||ROOM_VIEWS;
 function viewFor(name){
-  const v=ROOM_VIEWS[name];
+  const v=roomViews()[name]||ROOM_VIEWS[name];
   if(name==='View'&&curRoom&&TYPES[curRoom.type].terrace)
     return {p:[v.p[0],v.p[1],v.p[2]+4.3],t:[v.t[0],v.t[1],v.t[2]+4.3],fov:v.fov};
   return v;
@@ -2537,7 +2549,7 @@ function paint(){
     : `${T_.short||T_.name} · ${curRoom.no}<span>${curB.name.toUpperCase()}</span>`;
   ptitle.textContent = mode==='resort' ? 'The project' : mode==='building' ? curB.name : 'Sample flat';
   viewsEl.innerHTML = mode==='room'
-    ? Object.keys(ROOM_VIEWS).map(k=>`<button class="chip" data-v="${k}" aria-pressed="${k==='Entry'}">${k}</button>`).join('')
+    ? Object.keys(roomViews()).map(k=>`<button class="chip" data-v="${k}" aria-pressed="${k==='Entry'}">${k}</button>`).join('')
     : '';
   pc.innerHTML = mode==='resort'?resortPanel():mode==='building'?buildingPanel():roomPanel();
   pc.scrollTop=0;pc.classList.remove('in');void pc.offsetWidth;pc.classList.add('in');
@@ -2589,7 +2601,8 @@ function roomPanel(){
   </dl>
   ${sec(1,'In this home')}<ul class="am">${t.am.map(a=>`<li><span class="ico">${amIcon(a)}</span>${a}</li>`).join('')}</ul>
   ${sec(2,'Specifications')}<dl class="spec">${SPECS.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>
-  <p class="note">You are standing in the master bedroom, with its attached bath and ${t.terrace?'private terrace':'balcony'}.</p>`;
+  <p class="note">${fullFlat(curRoom.type)?'The whole home is furnished: use the room buttons below to walk from the entry through every room.'
+    :`You are standing in the master bedroom, with its attached bath and ${t.terrace?'private terrace':'balcony'}.`}</p>`;
 }
 pc.addEventListener('click',e=>{
   const el=e.target.closest('[data-b],[data-room],[data-act]'); if(!el) return;

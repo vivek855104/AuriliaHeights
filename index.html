@@ -5,7 +5,8 @@
 <title>Aurelia Heights</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=Oswald:wght@500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Serif+Devanagari:wght@400;500&display=swap" rel="stylesheet">
+<script src="i18n.js"></script>
 <style>
 /* ── design system: deep green-charcoal glass, ivory type, champagne and antique-gold accents.
    Spacing runs on a 4 px grid (4 · 8 · 12 · 16 · 24 · 32) ── */
@@ -16,7 +17,7 @@
   --onaccent:#151a17;--hover:rgba(211,191,151,.06);--sel:rgba(211,191,151,.09);
   --g-bg:linear-gradient(158deg,rgba(52,41,24,.97) 0%,rgba(30,24,15,.97) 46%,rgba(19,16,11,.98) 100%);--g-bd:rgba(214,180,112,.3);
   --g-sh:0 22px 56px rgba(6,9,8,.32),0 1px 0 rgba(255,255,255,.04) inset;--blur:18px;
-  --f-disp:"Fraunces",Georgia,serif;--f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --f-disp:"Fraunces","Noto Serif Devanagari",Georgia,serif;--f-ui:"Inter","Noto Sans Devanagari",system-ui,-apple-system,sans-serif;
   --ease:cubic-bezier(.22,.7,.2,1);--t:.38s;
   --pw:380px;--pr:calc(var(--pw) + 36px);--ph:46vh;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -82,7 +83,21 @@ body.intro .lbl{opacity:0;pointer-events:none}
   letter-spacing:.005em;color:var(--ink);font-variation-settings:"opsz" 72}
 #crest:before{content:"";position:absolute;left:20px;right:40%;top:-1px;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
 #crest span{display:block;margin-top:6px;font:500 8.5px/1 var(--f-ui);letter-spacing:.34em;color:var(--champ);opacity:.8}
-#tod{margin-left:auto;padding:10px 18px 12px;border-radius:12px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+/* language switch: English, Hindi, Marathi */
+#lang{margin-left:auto;display:flex;align-items:center;gap:2px;padding:5px;border-radius:12px;align-self:stretch}
+#lang button{border:0;background:transparent;color:var(--mute);font:500 11.5px/1 var(--f-ui);padding:9px 10px;min-width:38px;border-radius:8px;
+  cursor:pointer;transition:background .3s,color .3s,box-shadow .3s}
+#lang button:hover{color:var(--ink);background:var(--hover)}
+#lang button[aria-pressed="true"]{color:var(--ink);background:rgba(211,191,151,.14);box-shadow:inset 0 0 0 1px rgba(211,191,151,.32)}
+/* Devanagari is never letter-spaced: tracking pulls the joined script apart */
+html:lang(hi) *,html:lang(mr) *{letter-spacing:normal!important}
+/* the small tracked capitals become readable Devanagari sizes */
+html:lang(hi) :is(#ptitle,.eyebrow,.kpi span,.kpi em,.chips>span:first-child,#pc h2,.facts dt,.spec dt,.flr span,.item.tw .figs span,
+  .lbl span,#tod-label,.k-tag,#crest span,.crumb,.chip),
+html:lang(mr) :is(#ptitle,.eyebrow,.kpi span,.kpi em,.chips>span:first-child,#pc h2,.facts dt,.spec dt,.flr span,.item.tw .figs span,
+  .lbl span,#tod-label,.k-tag,#crest span,.crumb,.chip){font-size:12px;text-transform:none}
+html:lang(hi) .k-sub,html:lang(mr) .k-sub{font-size:13px;text-transform:none}
+#tod{margin-left:0;padding:10px 18px 12px;border-radius:12px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
 #tod-label{font:500 8.5px/1 var(--f-ui);letter-spacing:.32em;text-transform:uppercase;color:var(--champ);text-align:center;transition:color .4s}
 #tod .row{display:flex;align-items:center;gap:12px}
 #tod svg{flex:none;width:14px;height:14px;fill:none;stroke:var(--mute);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
@@ -242,14 +257,14 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
 #fade{position:fixed;inset:0;background:#07090a;opacity:0;pointer-events:none;transition:opacity .45s;z-index:5}
 #load{position:fixed;inset:0;z-index:9;background:#0a0a0a;color:var(--ink);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:20px;transition:opacity .7s}
-#load>*:not(canvas){position:relative;z-index:1}
-#flow{position:absolute;inset:0;width:100%;height:100%;display:block}
+#load>*:not(canvas),#visit>*:not(canvas){position:relative;z-index:1}
+#flow,#visit canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* a soft dark pool behind the title keeps the text readable over the moving field */
-#load:after{content:"";position:absolute;inset:0;pointer-events:none;
+#load:after,#visit:after{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 34% 26% at 50% 50%,rgba(10,10,10,.82),rgba(10,10,10,.35) 60%,transparent 100%)}
 /* kinetic loading type: one condensed word per stage, sliding through a mask with a faint mirrored echo.
    Only transform and opacity animate, so the motion stays smooth while the scene is being built */
-#kin{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+#kin,.kin{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
 .k-tag{font:500 11px/1 "Oswald",var(--f-ui);letter-spacing:.5em;text-transform:uppercase;color:var(--champ);opacity:.75;margin-left:.2em}
 .k-row{position:relative;font:600 clamp(48px,8.5vw,92px)/1 "Oswald",var(--f-ui);letter-spacing:.015em;text-transform:uppercase}
 .k-mask{display:grid;overflow:hidden;padding:.04em 0;min-width:5.2em}
@@ -265,9 +280,22 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
 @keyframes kDrift{to{transform:translateX(.4em)}}
 .k-name{font:400 15px/1 var(--f-disp);letter-spacing:.02em;color:var(--ink2);margin-left:.1em}
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-@media(max-width:520px){.k-echo-wrap{display:none}}
-#bar{width:min(220px,60vw);height:1px;background:rgba(211,191,151,.16);overflow:hidden}
-#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--champ));transition:width .3s}
+@media(max-width:520px){.k-echo-wrap{display:none}.k-alts{position:static;height:auto;flex-direction:row;gap:14px;margin:8px 0 0}#lang button{min-width:30px;padding:9px 6px}}
+#bar,.vbar{width:min(220px,60vw);height:1px;background:rgba(211,191,151,.16);overflow:hidden}
+#bar i,.vbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--champ));transition:width .3s}
+.vbar i{transition:width 2.4s cubic-bezier(.3,.6,.2,1)}
+/* "Welcome" in the other two languages, stacked beside the word around its mirrored echo */
+.k-alts{position:absolute;left:100%;top:-.1em;height:1.22em;margin-left:-.06em;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.k-alts span{display:block;font-size:.3em;line-height:1;white-space:nowrap;color:#ece4d3;opacity:0;font-family:"Noto Sans Devanagari","Oswald",var(--f-ui);font-weight:600;text-transform:none}
+.k-alts span:last-child{color:var(--champ)}
+.k-alts.show span{animation:kAlt .9s cubic-bezier(.2,.8,.2,1) .15s forwards}
+.k-alts.show span:last-child{animation-delay:.35s}
+@keyframes kAlt{from{transform:translateX(45%);opacity:0}to{transform:none;opacity:.85}}
+.k-sub{font:400 11px/1.5 var(--f-ui);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-left:.15em;opacity:0;animation:kSub .8s ease .6s forwards}
+@keyframes kSub{to{opacity:1}}
+/* the visit screen: the same flow field and kinetic type, shown while a sample flat is prepared */
+#visit{position:fixed;inset:0;z-index:8;background:#0a0a0a;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .5s}
+#visit.on{opacity:1}
 #oops{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;
   padding:28px;text-align:center;background:#0d110f;color:var(--ink);font-size:15px;line-height:1.6}
 
@@ -308,6 +336,8 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
     <div id="topbar">
       <button id="back" class="glass" aria-label="Back"><svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg><span>Back</span></button>
       <div id="crest" class="glass" aria-live="polite">Aurelia Heights<span>RESIDENCES</span></div>
+      <div id="lang" class="glass" role="group" aria-label="Language">
+        <button data-l="en" lang="en" aria-label="English">EN</button><button data-l="hi" lang="hi" aria-label="हिन्दी">हिं</button><button data-l="mr" lang="mr" aria-label="मराठी">मरा</button></div>
       <div id="tod" class="glass" title="Time of day">
         <div id="tod-label" aria-live="polite">Golden hour</div>
         <div class="row"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
@@ -330,10 +360,19 @@ ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;he
   <div id="kin">
     <div class="k-tag">Loading</div>
     <div class="k-row"><div class="k-mask" id="kmask"><span class="k-word in">Structure</span></div>
-      <div class="k-echo-wrap" aria-hidden="true"><span class="k-echo" id="kecho">Structure</span></div></div>
+      <div class="k-echo-wrap" aria-hidden="true"><span class="k-echo" id="kecho">Structure</span></div>
+      <div class="k-alts" id="kalts" aria-hidden="true"></div></div>
     <div id="bar"><i></i></div>
     <div class="k-name">Aurelia Heights</div>
   </div><small id="lmsg" class="sr">Loading</small></div>
+<script>
+/* the loading screen speaks the chosen language from the first frame */
+(function(){const t=s=>AH.tr(s);
+  document.querySelector('#kin .k-tag').textContent=t('Loading');
+  document.querySelector('#kmask .k-word').textContent=t('Structure');document.getElementById('kecho').textContent=t('Structure');
+  document.getElementById('kalts').innerHTML=['en','hi','mr'].filter(l=>l!==AH.lang).map(l=>'<span lang="'+l+'">'+AH.tr('Welcome',l)+'</span>').join('');
+  document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.l===AH.lang)));})();
+</script>
 <script type="text/plain" id="flow-src">
 /* ThreeUI's Portal Field "flow-field" renderer (Canvas 2D), kept as authored. Only the host is adapted:
    it is wrapped as flowRenderer(canvas, W, H, dpr, raf) so it can run in a worker on an OffscreenCanvas,
@@ -571,13 +610,11 @@ function flowRenderer(canvas, w0, h0, dpr, raf) {
 }
 </script>
 <script>
-/* loading backdrop host: runs the flow field in a worker on an OffscreenCanvas so it keeps moving smoothly
-   while the main thread builds the scene; falls back to the page's own thread where that is unsupported.
-   Everything shuts down once the loading screen is removed */
-(function(){
-  const load=document.getElementById('load'),canvas=document.getElementById('flow'),
-    src=document.getElementById('flow-src').textContent,dpr=window.devicePixelRatio||1;
-  if(!load||!canvas)return;
+/* flow field host: runs the flow field in a worker on an OffscreenCanvas so it keeps moving smoothly while the
+   main thread is busy (building the site, or a sample flat); falls back to the page's own thread where that is
+   unsupported. AH_flow(canvas) starts one and returns a function that stops it and releases everything */
+window.AH_flow=function(canvas){
+  const src=document.getElementById('flow-src').textContent,dpr=window.devicePixelRatio||1;
   let api=null,worker=null;
   const post=m=>{if(worker)worker.postMessage(m);else if(api)api[m.t](...m.a);};
   if(canvas.transferControlToOffscreen&&window.Worker&&window.OffscreenCanvas){
@@ -596,17 +633,22 @@ function flowRenderer(canvas, w0, h0, dpr, raf) {
   }
   if(!worker){
     try{api=new Function(src+';return flowRenderer;')()(canvas,innerWidth,innerHeight,dpr,f=>requestAnimationFrame(f));}
-    catch(e){return;}
+    catch(e){return ()=>{};}
   }
   const onResize=()=>post({t:'resize',a:[innerWidth,innerHeight]});
   const onMove=e=>post({t:'mouse',a:[e.clientX,e.clientY,true]});
   const onLeave=()=>post({t:'mouse',a:[-9999,-9999,false]});
   addEventListener('resize',onResize);addEventListener('mousemove',onMove);document.addEventListener('mouseleave',onLeave);
-  /* the scene removes the loading screen when it is ready: stop drawing and release everything */
-  const mo=new MutationObserver(()=>{if(document.body.contains(load))return;
-    mo.disconnect();post({t:'stop',a:[]});
+  return ()=>{post({t:'stop',a:[]});
     removeEventListener('resize',onResize);removeEventListener('mousemove',onMove);document.removeEventListener('mouseleave',onLeave);
-    if(worker)setTimeout(()=>worker.terminate(),100);});
+    if(worker)setTimeout(()=>worker.terminate(),100);};
+};
+/* the first loading screen: the scene removes it when it is ready, which stops its flow field */
+(function(){
+  const load=document.getElementById('load'),canvas=document.getElementById('flow');
+  if(!load||!canvas)return;
+  const stop=AH_flow(canvas);
+  const mo=new MutationObserver(()=>{if(document.body.contains(load))return;mo.disconnect();stop();});
   mo.observe(document.body,{childList:true});
 })();
 
@@ -661,12 +703,12 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 const PROJECT={name:'Aurelia Heights',kind:'Residences',tag:'Two towers around a five-acre garden.'};
 const FH=3.1, POD=4.6;              // floor-to-floor height, and the double-height entrance lobby (metres)
 const TYPES={
-  bhk2:{name:'2 BHK',price:11200000,carpet:'780 sq ft',config:'2 bed · 2 bath',view:'Garden',
+  bhk2:{name:'2 BHK',price:11200000,carpet:'1,350 sq ft',config:'2 bed · 2 bath',view:'Garden',
     accent:0x1a4e4a, sheen:0x8fd8cc,
-    desc:'A compact, well-planned home. The living room opens onto a balcony over the garden, and the master bedroom you are standing in has its own bath.',
+    desc:'A generous, light-filled home. The living room opens onto a balcony over the garden, and the master bedroom you are standing in has its own bath.',
     am:['Two bedrooms, two baths','Modular kitchen with chimney','Sun-facing balcony','Wardrobes in both bedrooms',
         'Video door phone','Split AC points','Piped gas','Covered parking for one car']},
-  bhk3:{name:'3 BHK',price:16800000,carpet:'1,180 sq ft',config:'3 bed · 3 bath',view:'Garden and pool',
+  bhk3:{name:'3 BHK',price:16800000,carpet:'1,750 sq ft',config:'3 bed · 3 bath',view:'Garden and pool',
     accent:0x27406e, sheen:0x9db6e8,
     desc:'Three bedrooms and a separate dining area, with two balconies. The master suite shown here has an attached bath and looks across the garden toward the pool.',
     am:['Three bedrooms, three baths','Modular kitchen and utility','Two balconies','Walk-in wardrobe',
@@ -722,14 +764,16 @@ const unitPrice=(t,floor)=>Math.round(TYPES[t].price*(1+.006*(floor-1))/1e4)*1e4
 const bar=document.querySelector('#bar i'), lmsg=document.getElementById('lmsg');
 /* the build reports many small steps; the loading screen shows only four words for them */
 const kmask=document.getElementById('kmask'),kecho=document.getElementById('kecho');
+const tl=s=>AH.tr(s);                      // the visible text for an English key, in the chosen language
 const loadWord=p=>p>=1?'Welcome':p>=.74?'Landscape':p>=.46?'Materials':'Structure';
 function swapWord(w){
   const cur=kmask&&kmask.querySelector('.k-word:not(.out)');
-  if(!cur||cur.textContent===w)return;
+  if(!cur||(cur.dataset.k||'Structure')===w)return;
   cur.classList.remove('in');cur.classList.add('out');setTimeout(()=>cur.remove(),800);
-  const n=document.createElement('span');n.className='k-word in';n.textContent=w;kmask.appendChild(n);
-  kecho.textContent=w;kecho.classList.remove('in');void kecho.offsetWidth;kecho.classList.add('in');
-  lmsg.textContent=w;}
+  const n=document.createElement('span');n.className='k-word in';n.dataset.k=w;n.textContent=tl(w);kmask.appendChild(n);
+  kecho.textContent=tl(w);kecho.classList.remove('in');void kecho.offsetWidth;kecho.classList.add('in');
+  if(w==='Welcome'){const a=document.getElementById('kalts');if(a)a.classList.add('show');}
+  lmsg.textContent=tl(w);}
 const step=(m,p)=>{bar.style.width=(p*100)+'%';swapWord(loadWord(p));
   return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));};
 
@@ -1938,8 +1982,7 @@ function buildResort(){
   // labels
   BUILDINGS.forEach(b=>{
     const el=document.createElement('button');el.className='lbl';
-    el.innerHTML=`<div class="tag"><i>${String(BUILDINGS.indexOf(b)+1).padStart(2,'0')}</i><div class="txt"><b>${b.name}</b>`+
-      `<span>${b.tower?b.floors+' floors · '+homes(b)+' homes':'Amenity'}</span></div></div><div class="stem"></div><div class="pin"></div>`;
+    el.innerHTML=labelHTML(b);
     el.onclick=()=>enterBuilding(b.id);
     el.onmouseenter=()=>setHover(b.id);el.onmouseleave=()=>setHover(null);
     document.getElementById('labels').appendChild(el);
@@ -2377,7 +2420,7 @@ function applyLight(k){
   if(room&&room.userData.apply)room.userData.apply(a,b,f);
   document.body.classList.toggle('night',todK>.65);
   const lab=document.getElementById('tod-label'),mode_=todK<.18?'Daylight':todK<.62?'Golden hour':'Night';
-  if(lab&&lab.textContent!==mode_){lab.textContent=mode_;document.getElementById('tod-range').setAttribute('aria-valuetext',mode_);}
+  if(lab&&lab.dataset.k!==mode_){lab.dataset.k=mode_;lab.textContent=tl(mode_);document.getElementById('tod-range').setAttribute('aria-valuetext',tl(mode_));}
   applyTone();
 }
 /* the site gets a filmic curve; the room interiors keep the softer AgX they were lit for */
@@ -2386,17 +2429,17 @@ function applyTone(){
   if(rs){renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=resortExposure;}
   else{renderer.toneMapping=THREE.AgXToneMapping;renderer.toneMappingExposure=roomExposure;}
   if(filmPass){const u=filmPass.uniforms;
-    u.sat.value=rs?1.1:1.06;u.con.value=rs?1.04:1.03;u.warm.value=rs?1:.8;u.vig.value=rs?.6:.65;}
+    u.sat.value=rs?1.1:1.2;u.con.value=rs?1.04:1.06;u.warm.value=rs?1:.8;u.vig.value=rs?.6:.65;}
 }
 const RESORT_CAM={p:[86,92,178],t:[0,14,0]};
 const ROOM_VIEWS={
-  Entry:{p:[1.5,1.62,-3.0],t:[-.9,1.15,1.1],fov:34},
-  Bed:{p:[1.5,1.5,-1.0],t:[-1.7,.85,.75],fov:36},
-  Lounge:{p:[-.2,1.5,-.3],t:[1.2,.9,2.9],fov:36},
-  Window:{p:[-.4,1.55,-.6],t:[.5,1.2,3.6],fov:32},
-  Balcony:{p:[.3,1.55,3.1],t:[.5,1.0,6.2],fov:38},
-  View:{p:[.3,1.75,5.24],t:[.6,-1.6,7.9],fov:44},     // leaning over the rail, looking down at the garden
-  Bath:{p:[-.95,1.55,-1.0],t:[-1.85,1.2,-2.6],fov:30}
+  Entry:{p:[1.5,1.62,-3.0],t:[-.9,1.15,1.1],fov:54},
+  Bed:{p:[1.5,1.5,-1.0],t:[-1.7,.85,.75],fov:56},
+  Lounge:{p:[-.2,1.5,-.3],t:[1.2,.9,2.9],fov:56},
+  Window:{p:[-.4,1.55,-.6],t:[.5,1.2,3.6],fov:52},
+  Balcony:{p:[.3,1.55,3.1],t:[.5,1.0,6.2],fov:58},
+  View:{p:[.3,1.75,5.24],t:[.6,-1.6,7.9],fov:64},     // leaning over the rail, looking down at the garden
+  Bath:{p:[-.95,1.55,-1.0],t:[-1.85,1.2,-2.6],fov:50}
 };
 function limits(m){
   const c=controls;
@@ -2444,13 +2487,36 @@ function enterBuilding(id){
 let flatMod=null;
 const FLAT_API={THREE,mergeGeometries,M,LOW,Z1,RH,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,ENV:()=>ENV};
 const fullFlat=t=>t==='bhk2';
+/* while a sample flat is prepared the loading screen returns: the same flow field and kinetic type, welcoming the
+   visitor in all three languages, with a line saying where they are going. It stays at least long enough to read */
+let visitEl=null;
+function showVisit(title){
+  if(visitEl)return;
+  const v=document.createElement('div');v.id='visit';
+  const others=['en','hi','mr'].filter(l=>l!==AH.lang);
+  v.innerHTML=`<canvas aria-hidden="true"></canvas><div class="kin" role="status">
+    <div class="k-tag">${tl('Entering')}</div>
+    <div class="k-row"><div class="k-mask"><span class="k-word in">${tl('Welcome')}</span></div>
+      <div class="k-echo-wrap" aria-hidden="true"><span class="k-echo in">${tl('Welcome')}</span></div>
+      <div class="k-alts show" aria-hidden="true">${others.map(l=>`<span lang="${l}">${AH.tr('Welcome',l)}</span>`).join('')}</div></div>
+    <div class="vbar"><i></i></div><div class="k-name">${title}</div>
+    <div class="k-sub">${tl('Taking you to the real experience')}</div></div>`;
+  document.body.appendChild(v);
+  v._stop=window.AH_flow?AH_flow(v.querySelector('canvas')):()=>{};v._t=performance.now();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{v.classList.add('on');v.querySelector('.vbar i').style.width='100%';}));
+  visitEl=v;}
+function hideVisit(now){
+  const v=visitEl;if(!v)return;visitEl=null;
+  const wait=now?0:Math.max(0,2600-(performance.now()-v._t));
+  setTimeout(()=>{v.classList.remove('on');setTimeout(()=>{v._stop();v.remove();},550);},wait);}
 function enterRoom(no){
   const r=curB.rooms.find(x=>x[0]===no); if(!r) return;
+  showVisit(`${curB.name} · ${tl('Flat')} ${no}`);
   if(fullFlat(r[1])&&!flatMod){
     document.body.style.cursor='progress';
     const sc=document.createElement('script');sc.src='flat-2bhk.js';
     sc.onload=()=>{document.body.style.cursor='';if(window.AureliaFlat){flatMod=window.AureliaFlat;enterRoom(no);}};
-    sc.onerror=()=>{document.body.style.cursor='';sc.remove();console.error('Could not load flat-2bhk.js');};
+    sc.onerror=()=>{document.body.style.cursor='';sc.remove();hideVisit(true);console.error('Could not load flat-2bhk.js');};
     document.head.appendChild(sc);
     return;}
   fade(()=>{
@@ -2461,6 +2527,7 @@ function enterRoom(no){
     if(renderPass) renderPass.scene=room;
     limits('room');tween=null;controls.enabled=true;
     gotoView('Entry',true);paint();
+    requestAnimationFrame(()=>requestAnimationFrame(()=>hideVisit()));   // once the flat has drawn its first frame
   });
 }
 function exitRoom(){
@@ -2483,7 +2550,9 @@ function viewFor(name){
     return {p:[v.p[0],v.p[1],v.p[2]+4.3],t:[v.t[0],v.t[1],v.t[2]+4.3],fov:v.fov};
   return v;
 }
+let curView='Entry';
 function gotoView(name,instant){
+  curView=name;
   const v=viewFor(name),p=new THREE.Vector3(...v.p),look=new THREE.Vector3(...v.t);
   const t=p.clone().addScaledVector(look.clone().sub(p).normalize(),.012);
   document.querySelectorAll('#views .chip').forEach(c=>
@@ -2539,20 +2608,34 @@ function elevSvg(b){
 const towerCard=(b,i)=>`<li><button class="item tw" data-b="${b.id}">
   <span class="elev">${elevSvg(b)}<span class="idx">${String(i+1).padStart(2,'0')}</span></span>
   <b>${b.name}</b>
-  <span class="figs"><span><strong>${b.floors}</strong>Floors</span><span><strong>${homes(b)}</strong>Homes</span></span>${CHEVR}</button></li>`;
+  <span class="figs"><span><strong>${b.floors}</strong>${tl('Floors')}</span><span><strong>${homes(b)}</strong>${tl('Homes')}</span></span>${CHEVR}</button></li>`;
 const stayItem=b=>`<li><button class="item" data-b="${b.id}"><span class="ico">${amIcon(b.name+' '+b.sub)}</span>
-  <span class="txt"><b>${b.name}</b><small>${b.sub}</small></span>${CHEVR}</button></li>`;
+  <span class="txt"><b>${b.name}</b><small>${tl(b.sub)}</small></span>${CHEVR}</button></li>`;
 const sec=(n,t)=>`<h2><i>${String(n).padStart(2,'0')}</i>${t}</h2>`;
+const carpet=t=>t.carpet.replace('sq ft',tl('sq ft'));
+function labelHTML(b){
+  return `<div class="tag"><i>${String(BUILDINGS.indexOf(b)+1).padStart(2,'0')}</i><div class="txt"><b>${b.name}</b>`+
+    `<span>${b.tower?`${b.floors} ${tl('floors')} · ${homes(b)} ${tl('homes')}`:tl('Amenity')}</span></div></div><div class="stem"></div><div class="pin"></div>`;}
+/* switching language redraws every piece of text in place; the 3D scene is untouched */
+function setLang(l){
+  AH.lang=l;
+  document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.l===l)));
+  BUILDINGS.forEach(b=>{if(b.el)b.el.innerHTML=labelHTML(b);});resetLabelSizes();
+  const lab=document.getElementById('tod-label');if(lab&&lab.dataset.k){lab.textContent=tl(lab.dataset.k);}
+  paint();}
+document.getElementById('lang').addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(b&&b.dataset.l!==AH.lang)setLang(b.dataset.l);});
 
 function paint(){
   backBtn.style.display=mode==='resort'?'none':'flex';
   const T_=curRoom&&TYPES[curRoom.type];
-  crest.innerHTML = mode==='resort' ? `${PROJECT.name}<span>${PROJECT.kind.toUpperCase()}</span>`
+  crest.innerHTML = mode==='resort' ? `${PROJECT.name}<span>${tl(PROJECT.kind).toUpperCase()}</span>`
     : mode==='building' ? `${curB.name}<span>${PROJECT.name.toUpperCase()}</span>`
-    : `${T_.short||T_.name} · ${curRoom.no}<span>${curB.name.toUpperCase()}</span>`;
-  ptitle.textContent = mode==='resort' ? 'The project' : mode==='building' ? curB.name : 'Sample flat';
+    : `${tl(T_.short||T_.name)} · ${curRoom.no}<span>${curB.name.toUpperCase()}</span>`;
+  ptitle.textContent = mode==='resort' ? tl('The project') : mode==='building' ? curB.name : tl('Sample flat');
+  backBtn.querySelector('span').textContent=tl('Back');
+  document.querySelector('#popen span').textContent=tl('Homes');
   viewsEl.innerHTML = mode==='room'
-    ? Object.keys(roomViews()).map(k=>`<button class="chip" data-v="${k}" aria-pressed="${k==='Entry'}">${k}</button>`).join('')
+    ? Object.keys(roomViews()).map(k=>`<button class="chip" data-v="${k}" aria-pressed="${k===curView}">${tl(k)}</button>`).join('')
     : '';
   pc.innerHTML = mode==='resort'?resortPanel():mode==='building'?buildingPanel():roomPanel();
   pc.scrollTop=0;pc.classList.remove('in');void pc.offsetWidth;pc.classList.add('in');
@@ -2560,52 +2643,52 @@ function paint(){
 }
 function resortPanel(){
   const towers=BUILDINGS.filter(b=>b.tower),fac=BUILDINGS.filter(b=>!b.tower);
-  return `<div class="hero"><div class="eyebrow">${PROJECT.kind}</div><h1>${PROJECT.name}</h1><p class="tag">${PROJECT.tag}</p></div>
-  <p class="lede">Fly around the site, pick a tower, then step inside a sample flat. The slider at the top takes the day into night.</p>
+  return `<div class="hero"><div class="eyebrow">${tl(PROJECT.kind)}</div><h1>${PROJECT.name}</h1><p class="tag">${tl(PROJECT.tag)}</p></div>
+  <p class="lede">${tl('Fly around the site, pick a tower, then step inside a sample flat. The slider at the top takes the day into night.')}</p>
   <div class="kpis">
-    <div class="kpi"><b>${String(towers.length).padStart(2,'0')}</b><span>Towers</span><em>${towers.map(b=>b.floors).join(' & ')} floors</em></div>
-    <div class="kpi"><b>${towers.reduce((s,b)=>s+homes(b),0)}</b><span>Homes</span><em>in two towers</em></div>
-    <div class="kpi"><b>70<small>%</small></b><span>Open space</span><em>of the site, approx.</em></div>
+    <div class="kpi"><b>${String(towers.length).padStart(2,'0')}</b><span>${tl('Towers')}</span><em>${towers.map(b=>b.floors).join(' & ')} ${tl('floors')}</em></div>
+    <div class="kpi"><b>${towers.reduce((s,b)=>s+homes(b),0)}</b><span>${tl('Homes')}</span><em>${tl('in two towers')}</em></div>
+    <div class="kpi"><b>70<small>%</small></b><span>${tl('Open space')}</span><em>${tl('of the site, approx.')}</em></div>
   </div>
-  <div class="chips"><span>Configurations</span><span class="chip-s">2 BHK</span><span class="chip-s">3 BHK</span><span class="chip-s">Penthouses</span></div>
-  ${sec(1,'Towers')}<ul class="stay two">${towers.map(towerCard).join('')}</ul>
-  ${sec(2,'Amenities')}<ul class="stay">${fac.map(stayItem).join('')}</ul>
-  <p class="note">Demo only: names and specifications are placeholders.</p>`;
+  <div class="chips"><span>${tl('Configurations')}</span><span class="chip-s">2 BHK</span><span class="chip-s">3 BHK</span><span class="chip-s">${tl('Penthouses')}</span></div>
+  ${sec(1,tl('Towers'))}<ul class="stay two">${towers.map(towerCard).join('')}</ul>
+  ${sec(2,tl('Amenities'))}<ul class="stay">${fac.map(stayItem).join('')}</ul>
+  <p class="note">${tl('Demo only: names and specifications are placeholders.')}</p>`;
 }
 function buildingPanel(){
-  const b=curB,head=`<div class="hero"><button class="crumb" data-act="up">${CHEVL}Site</button>
-    <div class="eyebrow">${PROJECT.name}</div><h1>${b.name}</h1></div><p class="lede">${b.desc}</p>`;
-  if(!b.tower) return `${head}${sec(1,'What is here')}<ul class="am">${b.feat.map(a=>`<li><span class="ico">${amIcon(a)}</span>${a}</li>`).join('')}</ul>`;
+  const b=curB,head=`<div class="hero"><button class="crumb" data-act="up">${CHEVL}${tl('Site')}</button>
+    <div class="eyebrow">${PROJECT.name}</div><h1>${b.name}</h1></div><p class="lede">${tl(b.desc)}</p>`;
+  if(!b.tower) return `${head}${sec(1,tl('What is here'))}<ul class="am">${b.feat.map(a=>`<li><span class="ico">${amIcon(a)}</span>${tl(a)}</li>`).join('')}</ul>`;
   const list=`<ul class="stay">${b.rooms.map(([no,t,fl])=>`<li><button class="item" data-room="${no}">
-      <span class="flr"><b>${fl}</b><span>Floor</span></span>
-      <span class="txt"><b>Flat ${no}<span class="badge ${t}">${TYPES[t].short||TYPES[t].name}</span></b><small>${TYPES[t].name} · ${TYPES[t].carpet}</small></span>
+      <span class="flr"><b>${fl}</b><span>${tl('Floor')}</span></span>
+      <span class="txt"><b>${tl('Flat')} ${no}<span class="badge ${t}">${tl(TYPES[t].short||TYPES[t].name)}</span></b><small>${tl(TYPES[t].name)} · ${carpet(TYPES[t])}</small></span>
       ${CHEVR}</button></li>`).join('')}</ul>`;
   return `${head}
     <div class="kpis sm" style="--n:4">
-      <div class="kpi"><b>${b.floors}</b><span>Floors</span></div>
-      <div class="kpi"><b>${homes(b)}</b><span>Homes</span></div>
-      <div class="kpi"><b>${b.lifts}</b><span>Lifts</span></div>
-      <div class="kpi"><b>${b.perFloor}</b><span>Per floor</span></div>
+      <div class="kpi"><b>${b.floors}</b><span>${tl('Floors')}</span></div>
+      <div class="kpi"><b>${homes(b)}</b><span>${tl('Homes')}</span></div>
+      <div class="kpi"><b>${b.lifts}</b><span>${tl('Lifts')}</span></div>
+      <div class="kpi"><b>${b.perFloor}</b><span>${tl('Per floor')}</span></div>
     </div>
-    <div class="note-line"><svg viewBox="0 0 16 16">${IC.leaf}</svg>Faces the central garden · ${b.lifts} high-speed lifts</div>
-    ${sec(1,'Sample flats you can walk into')}${list}`;
+    <div class="note-line"><svg viewBox="0 0 16 16">${IC.leaf}</svg>${tl('Faces the central garden')} · ${b.lifts} ${tl('high-speed lifts')}</div>
+    ${sec(1,tl('Sample flats you can walk into'))}${list}`;
 }
 function roomPanel(){
   const t=TYPES[curRoom.type];
   return `<div class="hero"><button class="crumb" data-act="up">${CHEVL}${curB.name}</button>
-    <div class="eyebrow">${curB.name} · ${ord(curRoom.floor)} floor</div><h1>${t.name}</h1>
-    <div class="pills"><span class="chip-s">Flat ${curRoom.no}</span><span class="chip-s">${t.config}</span><span class="chip-s">${t.carpet} carpet</span></div></div>
-  <p class="lede">${t.desc}</p>
+    <div class="eyebrow">${curB.name} · ${AH.floor(curRoom.floor)}</div><h1>${tl(t.name)}</h1>
+    <div class="pills"><span class="chip-s">${tl('Flat')} ${curRoom.no}</span><span class="chip-s">${tl(t.config)}</span><span class="chip-s">${carpet(t)} ${tl('carpet')}</span></div></div>
+  <p class="lede">${tl(t.desc)}</p>
   <dl class="facts">
-    <div><dt>Carpet area</dt><dd>${t.carpet}${t.terrace?' + terrace':''}</dd></div>
-    <div><dt>Layout</dt><dd>${t.config}</dd></div>
-    <div><dt>Floor</dt><dd>${ord(curRoom.floor)} of ${curB.floors}</dd></div>
-    <div><dt>Outlook</dt><dd>${t.view}</dd></div>
+    <div><dt>${tl('Carpet area')}</dt><dd>${carpet(t)}${t.terrace?' '+tl('+ terrace'):''}</dd></div>
+    <div><dt>${tl('Layout')}</dt><dd>${tl(t.config)}</dd></div>
+    <div><dt>${tl('Floor')}</dt><dd>${AH.floorOf(curRoom.floor,curB.floors)}</dd></div>
+    <div><dt>${tl('Outlook')}</dt><dd>${tl(t.view)}</dd></div>
   </dl>
-  ${sec(1,'In this home')}<ul class="am">${t.am.map(a=>`<li><span class="ico">${amIcon(a)}</span>${a}</li>`).join('')}</ul>
-  ${sec(2,'Specifications')}<dl class="spec">${SPECS.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>
-  <p class="note">${fullFlat(curRoom.type)?'The whole home is furnished: use the room buttons below to walk from the entry through every room.'
-    :`You are standing in the master bedroom, with its attached bath and ${t.terrace?'private terrace':'balcony'}.`}</p>`;
+  ${sec(1,tl('In this home'))}<ul class="am">${t.am.map(a=>`<li><span class="ico">${amIcon(a)}</span>${tl(a)}</li>`).join('')}</ul>
+  ${sec(2,tl('Specifications'))}<dl class="spec">${SPECS.map(x=>`<dt>${tl(x[0])}</dt><dd>${tl(x[1])}</dd>`).join('')}</dl>
+  <p class="note">${tl(fullFlat(curRoom.type)?'The whole home is furnished: use the room buttons below to walk from the entry through every room.'
+    :`You are standing in the master bedroom, with its attached bath and ${t.terrace?'private terrace':'balcony'}.`)}</p>`;
 }
 pc.addEventListener('click',e=>{
   const el=e.target.closest('[data-b],[data-room],[data-act]'); if(!el) return;
@@ -2764,10 +2847,10 @@ function loop(){
     await step('ready',1);
     loop();
     const l=document.getElementById('load');
-    l.style.opacity='0';setTimeout(()=>l.remove(),800);
+    setTimeout(()=>{l.style.opacity='0';setTimeout(()=>l.remove(),800);},1300);      // let "Welcome" land in all three languages
     if(!still) setTimeout(()=>{
       fly(RESORT_CAM.p,RESORT_CAM.t,3.8,40,()=>{limits('resort');document.body.classList.remove('intro');},true);
-      setTimeout(()=>document.body.classList.remove('intro'),8000);},450);
+      setTimeout(()=>document.body.classList.remove('intro'),8000);},1500);
 
   }catch(err){
     console.error(err);

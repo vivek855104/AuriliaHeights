@@ -16,17 +16,26 @@
            x -6      -2.4               2.4         6                                                      */
 (function(){
 function buildFlat(api,unit){
-  const {THREE,mergeGeometries,M,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,LOW,Z1,RH}=api;
+  const {THREE,mergeGeometries,M,rbox,scaled,contactMat,pillowGeo,drapeGeo,bladeClump,roomExterior,rng,fbm,cnv,LOW,Z1}=api;
+  /* the plan is drawn at a compact size and enlarged here: walls, floors, windows and doors stretch by K across the
+     floor (about the garden glass, which must stay where the tower facade is), and the ceiling rises to RH.
+     Furniture is never stretched: each group is anchored to the wall it stands against and moves with it (fur) */
+  const K=1.18,RH=3.1,ap=(x,z)=>[x*K,Z1+(z-Z1)*K];
   const PI=Math.PI,S=new THREE.Scene(),owned=S.userData.owned=[];
   const own=m=>{owned.push(m);return m;};
   const G=new THREE.Group();S.add(G);
   const rr=rng(2202);
 
   /* ── batching: static geometry is baked in place and merged per material at the end ── */
+  let ARCH=true,SH=[0,0];
+  const arch=()=>{ARCH=true;SH=[0,0];};
+  const fur=(ax,az)=>{ARCH=false;const q=ap(ax,az);SH=[q[0]-ax,q[1]-az];};
+  const AM=new THREE.Matrix4().makeTranslation(0,0,Z1).multiply(new THREE.Matrix4().makeScale(K,1,K)).multiply(new THREE.Matrix4().makeTranslation(0,0,-Z1));
   const buckets=new Map(),tmpM=new THREE.Matrix4(),tmpQ=new THREE.Quaternion(),tmpE=new THREE.Euler(),tmpV=new THREE.Vector3(),one=new THREE.Vector3(1,1,1);
   function add(geo,mat,x,y,z,rx,ry,rz,shadow){
     tmpE.set(rx||0,ry||0,rz||0);tmpQ.setFromEuler(tmpE);tmpM.compose(tmpV.set(x,y,z),tmpQ,one);
     let g=geo.index?geo.toNonIndexed():geo;if(g!==geo)geo.dispose();g.applyMatrix4(tmpM);
+    if(ARCH)g.applyMatrix4(AM);else g.translate(SH[0],0,SH[1]);
     ['position','normal','uv'].forEach(k=>{if(!g.attributes[k]&&k==='uv')g.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count*2),2));});
     Object.keys(g.attributes).forEach(k=>{if(!['position','normal','uv'].includes(k))g.deleteAttribute(k);});
     const key=mat.uuid+(shadow===false?'n':'s');
@@ -38,14 +47,14 @@ function buildFlat(api,unit){
   const flush=()=>{buckets.forEach(b=>{const m=new THREE.Mesh(mergeGeometries(b.list,false),b.mat);
     b.list.forEach(g=>g.dispose());m.castShadow=b.shadow;m.receiveShadow=true;G.add(m);});buckets.clear();};
   const contact=(x,z,w,d)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),contactMat());
-    m.rotation.x=-PI/2;m.position.set(x,.008,z);m.renderOrder=1;G.add(m);};
+    m.rotation.x=-PI/2;m.position.set(x+SH[0],.008,z+SH[1]);m.renderOrder=1;G.add(m);};
 
   /* ── materials owned by this flat (released when the flat is left) ── */
   const std=(o)=>own(new THREE.MeshStandardMaterial(o));
-  const paint=std({color:0xeee8dd,roughness:.94});
-  const paintSage=std({color:0x9ea592,roughness:.9});
-  const paintClay=std({color:0xc9a894,roughness:.9});
-  const lacquer=std({color:0x4f5d4c,roughness:.42});           // kitchen base units, deep sage
+  const paint=std({color:0xf6f0e4,roughness:.94});
+  const paintSage=std({color:0x86b08a,roughness:.9});
+  const paintClay=std({color:0xdd9670,roughness:.9});
+  const lacquer=std({color:0x2c6b55,roughness:.4});            // kitchen base units, deep emerald
   const lacquerLt=std({color:0xe9e3d7,roughness:.38});         // wall units
   const quartz=own(new THREE.MeshPhysicalMaterial({color:0xf3f0ea,roughness:.22,clearcoat:.3,clearcoatRoughness:.3}));
   const ceramic=own(new THREE.MeshPhysicalMaterial({color:0xf4f1ea,roughness:.25,clearcoat:.5,clearcoatRoughness:.2}));
@@ -65,10 +74,11 @@ function buildFlat(api,unit){
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;
     t.repeat.set(w/cell,h/cell);t.anisotropy=8;owned.push(t);return std({map:t,roughness:rough===undefined?.35:rough});}
   const fabric=(base,col,o)=>{const m=own(base.clone());m.color=new THREE.Color(col);Object.assign(m,o||{});return m;};
-  const sofaM=fabric(M.velvetLt,0xb9ab92,{roughness:.88,sheen:.4});
-  const chairM=fabric(M.velvetLt,0x7d8a74,{roughness:.88,sheen:.4});
-  const bed2M=fabric(M.linen,0x8fa0ad,{roughness:.92});
-  const headM=fabric(M.velvet,0xc2ae8e,{roughness:.86,sheen:.5});
+  const sofaM=fabric(M.velvetLt,0xe0c48f,{roughness:.86,sheen:.5});
+  const chairM=fabric(M.velvetLt,0x3f8f78,{roughness:.86,sheen:.5});
+  const mustardM=fabric(M.velvet,0xd99a2b,{roughness:.84,sheen:.5});
+  const bed2M=fabric(M.linen,0x5f97c4,{roughness:.9});
+  const headM=fabric(M.velvet,0xd3a465,{roughness:.84,sheen:.5});
   const pillowM=fabric(M.linen,0xffffff,{});
   const duvetM=fabric(M.duvet,0xffffff,{side:THREE.DoubleSide,sheen:.45});
   const leafM=c=>own(M.foliageFn(1.5,{color:c,side:THREE.DoubleSide,roughness:.5}));
@@ -151,53 +161,61 @@ function buildFlat(api,unit){
   frames.forEach(([x,z,w,a])=>{if(a==='z'){B(w+.1,.05,.16,x,2.17,z,M.frameWarm,{s:false});[-1,1].forEach(s=>B(.05,2.15,.16,x+s*(w/2+.02),1.07,z,M.frameWarm,{s:false}));}
     else{B(.16,.05,w+.1,x,2.17,z,M.frameWarm,{s:false});[-1,1].forEach(s=>B(.16,2.15,.05,x,1.07,z+s*(w/2+.02),M.frameWarm,{s:false}));}});
 
+  fur(4.2,-2.36);
   /* ── foyer: shoe cabinet with a mirror and a console bowl ── */
   B(1.6,.9,.38,4.2,.47,-2.62,M.walnut);B(1.64,.03,.4,4.2,.935,-2.62,M.marble);
   [3.66,4.2,4.74].forEach(x=>B(.006,.8,.006,x+.27,.47,-2.815,M.frame,{s:false,r:0}));
   B(.9,1.1,.02,4.2,1.65,-2.44,M.mirror,{s:false});B(.96,1.16,.015,4.2,1.65,-2.446,M.brassDark,{s:false});
   C(.16,.06,4.0,.98,-2.62,ceramic,{r2:.11});
-  B(.6,.01,1.1,4.2,.004,-4.3,own(scaled(M.rug,.6,1.1,1)),{s:false});
+  fur(4.2,-4.3);  B(.6,.01,1.1,4.2,.004,-4.3,own(scaled(M.rug,.6,1.1,1)),{s:false});
 
   /* ── living room ── */
-  const rugM=own(scaled(M.rug,2.8,2.3,2.6));
+  fur(.15,1.7);  const rugM=own(scaled(M.rug,2.8,2.3,2.6));
   P(2.9,2.3,.15,.006,1.7,rugM,-PI/2,0);
+  fur(2.36,1.75);
   /* three-seat sofa against the master wall, facing the TV */
   const SX=1.78,SZ=1.75;
   B(.92,.24,2.4,SX,.3,SZ,M.walnut,{r:.02});
   [-0.78,0,.78].forEach(o=>add(pillowGeo(.82,.2,.78,10,7+o,.35),sofaM,SX-.04,.52,SZ+o,0,0,0));
   add(pillowGeo(.2,.62,2.36,10,4,.3),sofaM,SX+.38,.82,SZ,0,0,0);
   [-1,1].forEach(s=>B(.92,.52,.16,SX,.5,SZ+s*1.26,sofaM,{r:.05}));
-  [[.12,1.08],[-.1,2.4]].forEach((q,i)=>add(pillowGeo(.14,.42,.44,8,20+i,.3),i?chairM:pillowM,SX+.22,.82,SZ+q[0]+(i?.6:-.6),0,0,.18));
+  [[.12,1.08],[-.1,2.4]].forEach((q,i)=>add(pillowGeo(.14,.42,.44,8,20+i,.3),i?chairM:mustardM,SX+.22,.82,SZ+q[0]+(i?.6:-.6),0,0,.18));
   contact(SX,SZ,1.4,2.8);
+  fur(.25,1.75);
   /* round marble coffee table and a side table */
   C(.5,.04,.25,.42,1.75,M.marble,{seg:40});C(.32,.38,.25,.2,1.75,M.walnut,{r2:.26,seg:24});
-  C(.2,.035,1.62,.56,.42,M.marble,{seg:28});C(.025,.54,1.62,.28,.42,M.brass,{seg:10});
-  add(new THREE.TorusGeometry(.1,.012,8,24),M.brass,.15,.45,1.68,PI/2,0,0,false);
+  fur(2.36,.42);  C(.2,.035,1.62,.56,.42,M.marble,{seg:28});C(.025,.54,1.62,.28,.42,M.brass,{seg:10});
+  fur(.25,1.75);  add(new THREE.TorusGeometry(.1,.012,8,24),M.brass,.15,.45,1.68,PI/2,0,0,false);
   B(.24,.03,.32,.4,.455,1.9,M.paper,{s:false});
+  fur(-1.35,2.85);
   /* accent lounge chair by the glass */
   const LCX=-1.35,LCZ=2.85;
   B(.72,.16,.72,LCX,.4,LCZ,chairM,{r:.07,ry:.6});B(.72,.5,.14,LCX-.21,.72,LCZ-.27,chairM,{r:.06,ry:.6});
   [[-.28,-.28],[.28,-.28],[-.28,.28],[.28,.28]].forEach(q=>{const c=Math.cos(.6),s=Math.sin(.6);
     B(.04,.32,.04,LCX+q[0]*c+q[1]*s,.16,LCZ-q[0]*s+q[1]*c,M.walnut,{r:.01});});
   contact(LCX,LCZ,1.1,1.1);
+  fur(-2.36,1.5);
   /* TV wall: walnut slats, a low floating console and the screen */
   for(let i=0;i<22;i++)B(.035,2.5,.07,-2.25,1.3,.45+i*.1,M.walnut,{r:.012});
   B(.46,.42,2.1,-2.02,.42,1.5,M.walnut,{r:.02});B(.44,.02,2.06,-2.02,.2,1.5,M.frameWarm,{s:false});
   B(.05,.82,1.42,-2.18,1.45,1.5,M.frame);B(.012,.76,1.36,-2.152,1.45,1.5,M.screen,{s:false});
   C(.06,.18,-2.0,.72,.85,ceramic,{r2:.04});C(.09,.08,-2.0,.67,2.2,ceramic,{r2:.07});
+  fur(2.36,.5);
   /* arc floor lamp over the sofa */
   C(.17,.03,1.9,.015,.42+.1,M.marble,{seg:28});C(.016,1.9,1.9,.96,.5,M.brass,{seg:8});
   add(new THREE.CylinderGeometry(.12,.2,.2,24,1,true),shade,1.9,1.98,.5,0,0,0,false);
+  arch();
   /* sheer curtains either side of the glass */
   [-2.05,2.05].forEach((x,i)=>{const w=.5,h=2.5,g=new THREE.PlaneGeometry(w,h,24,6),p=g.attributes.position;
     for(let k=0;k<p.count;k++){const u=(p.getX(k)+w/2)/w;p.setZ(k,Math.sin(u*PI*8+i)*.04);}g.computeVertexNormals();
-    const m=new THREE.Mesh(g,M.sheer);m.position.set(x,h/2+.1,Z1-.16);G.add(m);});
+    const m=new THREE.Mesh(g,M.sheer);m.position.set(x*K,h/2+.1,Z1-.16);G.add(m);});
   B(4.3,.02,.02,0,2.62,Z1-.16,M.brassDark,{s:false});
   /* plants */
   const plant=(x,z,h,n,seed,col,pot)=>{C(pot||.2,.42,x,.21,z,ceramic,{r2:(pot||.2)*.78});
-    const m=new THREE.Mesh(bladeClump(n,h,h*.09,h*.42,seed,6),leafM(col));m.position.set(x,.4,z);m.castShadow=true;G.add(m);};
-  plant(-1.95,3.15,1.15,16,51,0x3e8a46,.22);plant(2.0,.25,.8,12,52,0x4f8a43);
+    const m=new THREE.Mesh(bladeClump(n,h,h*.09,h*.42,seed,6),leafM(col));m.position.set(x+SH[0],.4,z+SH[1]);m.castShadow=true;G.add(m);};
+  fur(-1.95,3.15);plant(-1.95,3.15,1.15,16,51,0x3e8a46,.22);fur(2.36,.25);plant(2.0,.25,.8,12,52,0x4f8a43);
 
+  fur(0,-2.85);
   /* ── dining ── */
   const DX=0,DZ=-2.85;
   B(1.9,.05,.98,DX,.75,DZ,M.marble,{r:.015});
@@ -212,12 +230,14 @@ function buildFlat(api,unit){
   B(1.3,.05,.12,DX,1.62,DZ,M.brassDark);B(1.24,.012,.09,DX,1.594,DZ,ledM,{s:false});
   [-.55,.55].forEach(o=>C(.004,RH-1.65,DX+o,(RH+1.65)/2,DZ,M.steel,{s:false,seg:4}));
   C(.06,.22,DX+.3,.88,DZ,ceramic,{r2:.035,seg:16});
+  fur(2.36,-1.6);
   /* sideboard on the foyer wall, with art above */
   B(.42,.74,1.6,2.07,.45,-1.6,M.walnut,{r:.015});B(.44,.03,1.62,2.07,.835,-1.6,M.marble);
   [-.4,.4].forEach(o=>B(.01,.6,.76,1.855,.45,-1.6+o,M.walnut,{s:false}));
   B(.03,.8,1.1,2.28,1.6,-1.6,M.art);B(.035,.86,1.16,2.29,1.6,-1.6,M.brassDark,{s:false});
   C(.05,.24,2.05,.97,-2.1,ceramic,{r2:.03});
 
+  fur(-6,-5);
   /* ── modular kitchen: an L of base units, wall units on the back run, hob with chimney, sink under the window ── */
   const KZ=-5.0+.3,KX=-6.0+.3,CT=.9;                       // back-run and window-run base unit centre lines, counter top height
   /* back run along z=-5: x from -5.9 to -3.45, the tall fridge unit sits beyond it */
@@ -244,7 +264,7 @@ function buildFlat(api,unit){
   [[-5.55,.7],[-3.95,.7]].forEach(q=>{B(q[1],.72,.34,q[0],1.86,-4.83,lacquerLt,{r:.004});B(.006,.7,.006,q[0],1.86,-4.655,M.frame,{s:false,r:0});
     B(.3,.012,.012,q[0]+(q[0]<-4.6?.15:-.15),1.54,-4.65,M.brass,{s:false,r:0});B(q[1]-.06,.012,.03,q[0],1.495,-4.72,ledM,{s:false});});
   /* backsplash tiles on both runs */
-  const splash=tileMat('#7f988b','#5d7367',.15,2.45,.6,.25);
+  const splash=tileMat('#4f9e86','#3c7a68',.15,2.45,.6,.25);
   P(2.45,.6,-4.675,CT+.3,-4.995,splash,0,0);P(1.92,.2,-5.995,CT+.1,-3.46,splash,0,PI/2);
   P(.4,1.3,-5.995,CT+.65,-4.75,splash,0,PI/2);P(.5,1.3,-5.995,CT+.65,-2.75,splash,0,PI/2);
   /* sink and a tall arched tap under the window */
@@ -256,97 +276,109 @@ function buildFlat(api,unit){
   B(.006,1.3,.006,-3.03,.66,KZ+.345,M.frame,{s:false,r:0});
   B(.012,.6,.012,-2.7,1.0,KZ+.35,M.brass,{s:false,r:0});
   B(.56,.32,.02,-3.03,1.66,KZ+.34,blackGlass,{s:false,r:.004});
+  fur(-2.36,-3.5);
   /* breakfast counter in the hatch to the dining room, with two stools */
   B(.5,.04,1.45,-2.36,1.08,-3.5,quartz,{r:.006});
   [-3.9,-3.1].forEach(z=>{C(.18,.05,-1.92,.76,z,chairM,{seg:24});C(.018,.74,-1.92,.38,z,M.brassDark,{seg:8});
     add(new THREE.TorusGeometry(.15,.01,6,24),M.brassDark,-1.92,.28,z,PI/2,0,0,false);});
+  fur(-6,-5);
   /* counter dressing */
   C(.1,.16,-5.6,CT+.08,-4.75,ceramic,{r2:.08});B(.36,.025,.24,-5.3,CT+.013,-4.78,M.teak,{r:.008});
   plant(-5.75,-2.75,.35,8,57,0x5a9a44,.08);
 
+  fur(6,1.55);
   /* ── master bedroom ── */
   const MBX=5.05,MBZ=1.55;
   for(let i=0;i<8;i++)B(.1,1.08,.27,5.92,1.0,MBZ-1.05+i*.3,headM,{r:.045});
   B(.08,.06,2.5,5.92,1.6,MBZ,M.walnut,{r:.01});
   B(2.05,.22,1.95,MBX,.17,MBZ,M.walnut,{r:.02});B(1.95,.1,1.85,MBX,.05,MBZ,M.frameWarm,{s:false});
   B(2.0,.32,1.88,MBX-.02,.44,MBZ,pillowM,{r:.07});
-  const dv=new THREE.Mesh(drapeGeo(MBX-.26,MBZ,1.5,1.9,.66,.07,.18,.014,11,60,60),duvetM);
+  const dv=new THREE.Mesh(drapeGeo(MBX-.26,MBZ,1.5,1.9,.66,.07,.18,.014,11,60,60),duvetM);dv.position.set(SH[0],0,SH[1]);
   dv.castShadow=dv.receiveShadow=true;G.add(dv);
   [MBZ-.45,MBZ+.45].forEach((z,i)=>{add(pillowGeo(.5,.18,.72,12,i+2,.4),pillowM,5.6,.72,z,0,0,0);
     add(pillowGeo(.16,.5,.5,10,i+7,.22),headM,5.82,.88,z,0,0,-.1);});
   contact(MBX,MBZ,2.5,2.4);
   [MBZ-1.25,MBZ+1.25].forEach(z=>{B(.44,.32,.44,5.72,.44,z,M.walnut,{r:.02});B(.46,.025,.46,5.72,.61,z,M.marble);
-    const lp=new THREE.Mesh(new THREE.SphereGeometry(.08,18,12),ceramic);lp.scale.set(1,1.15,1);lp.position.set(5.72,.71,z);lp.castShadow=true;G.add(lp);
+    const lp=new THREE.Mesh(new THREE.SphereGeometry(.08,18,12),ceramic);lp.scale.set(1,1.15,1);lp.position.set(5.72+SH[0],.71,z+SH[1]);lp.castShadow=true;G.add(lp);
     add(new THREE.CylinderGeometry(.09,.13,.18,24,1,true),shade,5.72,.98,z,0,0,0,false);});
   P(2.2,2.6,4.35,.006,MBZ,own(scaled(M.rug,2.2,2.6,2.4)),-PI/2,0);
+  fur(2.36,2.12);
   /* full-height wardrobe on the living-room wall: four sliding panels with fluted glass inserts */
   B(.62,2.5,2.4,2.73,1.25,2.12,M.walnut,{r:.008});
   [1.22,1.82,2.42,3.02].forEach(z=>{B(.012,2.4,.004,3.045,1.25,z-.3,M.frame,{s:false,r:0});
     B(.01,1.8,.36,3.045,1.3,z,blackGlass,{s:false,r:.004});});
+  fur(3.2,-.5);
   /* dresser with a round mirror on the back wall */
   B(1.3,.74,.44,3.2,.42,-.22,M.walnut,{r:.015});B(1.32,.025,.46,3.2,.8,-.22,M.marble);
   C(.42,.02,3.2,1.55,-.43,M.mirror,{rx:PI/2,seg:40,s:false});
   add(new THREE.TorusGeometry(.42,.015,8,48),M.brassDark,3.2,1.55,-.42,0,0,0,false);
-  B(1.0,.42,.42,4.35,.24,MBZ,M.velvet,{r:.06});                                       // bench at the foot of the bed
-  plant(3.4,3.15,.9,12,61,0x3f8a47);
+  fur(6,1.55);  B(1.0,.42,.42,4.35,.24,MBZ,mustardM,{r:.06});                                       // bench at the foot of the bed
+  fur(2.36,3.5);  plant(3.4,3.15,.9,12,61,0x3f8a47);
 
+  arch();
   /* ── master bath: vanity with a stone top, wall-hung WC, glass shower with a rain head, tiled walls ── */
   const mbTile=tileMat('#e7e2d8','#cfc7b8',.3,2.1,2.2,.3);
   P(2.08,2.2,4.95,1.1,-2.29,mbTile,0,0);P(1.66,2.2,5.99,1.1,-1.46,mbTile,0,-PI/2);P(1.66,2.2,3.91,1.1,-1.46,mbTile,0,PI/2);
   P(.52,2.2,4.16,1.1,-.63,mbTile,0,PI);P(.78,2.2,5.6,1.1,-.63,mbTile,0,PI);
-  B(.9,.16,.5,4.45,.78,-2.04,M.walnut,{r:.02});B(.92,.04,.52,4.45,.88,-2.04,M.marble,{r:.01});
+  fur(4.45,-2.36);  B(.9,.16,.5,4.45,.78,-2.04,M.walnut,{r:.02});B(.92,.04,.52,4.45,.88,-2.04,M.marble,{r:.01});
   C(.17,.13,4.45,.96,-2.06,ceramic,{r2:.14,seg:28});C(.012,.2,4.45,1.0,-2.27,M.brass,{seg:8});
   B(.7,.8,.02,4.45,1.6,-2.28,M.mirror,{s:false});B(.012,.012,.6,4.45,2.04,-2.2,ledM,{s:false,ry:PI/2});
-  B(.38,.36,.54,3.98+.2,.44,-1.2,ceramic,{r:.12});B(.36,.5,.12,3.98+.06,.62,-1.2,ceramic,{r:.04});
-  B(.02,2.0,1.3,5.1,1.0,-1.65,showerGlass,{s:false,r:0});B(.03,.03,1.3,5.1,2.0,-1.65,M.brassDark,{s:false});
+  fur(3.84,-1.2);  B(.38,.36,.54,3.98+.2,.44,-1.2,ceramic,{r:.12});B(.36,.5,.12,3.98+.06,.62,-1.2,ceramic,{r:.04});
+  fur(6,-1.46);  B(.02,2.0,1.3,5.1,1.0,-1.65,showerGlass,{s:false,r:0});B(.03,.03,1.3,5.1,2.0,-1.65,M.brassDark,{s:false});
   C(.14,.012,5.55,2.2,-1.46,M.steel,{seg:24,s:false});C(.01,.25,5.55,2.33,-1.46,M.steel,{seg:6,s:false});
-  B(.02,.5,.02,5.98,1.3,-1.1,M.steel,{s:false});B(.5,.02,.02,5.75,1.05,-2.25,M.brass,{s:false});
+  fur(6,-2.36);  B(.02,.5,.02,5.98,1.3,-1.1,M.steel,{s:false});B(.5,.02,.02,5.75,1.05,-2.25,M.brass,{s:false});
   B(.04,.5,.3,5.75,.8,-2.24,pillowM,{s:false,r:.02});
 
+  fur(-2.36,1.55);
   /* ── bedroom 2: double bed against the living wall, a study desk under the window, wardrobe ── */
   const B2X=-3.45,B2Z=1.55;
   B(.1,1.0,1.6,-2.48,.95,B2Z,headM,{r:.03});
   B(2.0,.22,1.55,B2X,.17,B2Z,M.walnut,{r:.02});B(1.95,.28,1.5,B2X-.02,.42,B2Z,pillowM,{r:.07});
-  const dv2=new THREE.Mesh(drapeGeo(B2X-.25,B2Z,1.4,1.5,.6,.06,.16,.012,23,50,40),bed2M);
+  const dv2=new THREE.Mesh(drapeGeo(B2X-.25,B2Z,1.4,1.5,.6,.06,.16,.012,23,50,40),bed2M);dv2.position.set(SH[0],0,SH[1]);
   dv2.castShadow=dv2.receiveShadow=true;G.add(dv2);
   add(pillowGeo(.45,.16,1.2,12,31,.4),pillowM,-2.75,.66,B2Z,0,0,0);
   contact(B2X,B2Z,2.3,1.9);
   B(.4,.45,.4,-2.68,.32,B2Z+1.05,M.walnut,{r:.02});C(.07,.28,-2.68,.68,B2Z+1.05,ceramic,{r2:.05});
   add(new THREE.CylinderGeometry(.08,.11,.14,20,1,true),shade,-2.68,.88,B2Z+1.05,0,0,0,false);
+  fur(-4.2,Z1);
   /* study desk and chair under the window */
   B(1.5,.04,.6,-4.2,.74,3.05,M.teak,{r:.01});[-4.9,-3.5].forEach(x=>B(.04,.72,.56,x,.36,3.05,M.walnut,{r:.008}));
   B(.34,.22,.02,-4.4,.95,3.25,M.frame,{rx:-.2});B(.3,.012,.2,-4.4,.765,3.0,M.frame,{s:false});
   C(.05,.3,-3.75,.9,3.15,M.brassDark,{seg:8});
   chair(-4.2,2.45,PI);
+  fur(-4.83,-.5);
   /* wardrobe on the back wall, beside the door */
   B(2.2,2.3,.58,-4.83,1.15,-.17,lacquerLt,{r:.008});
   [-5.38,-4.83,-4.28].forEach(x=>B(.006,2.2,.006,x+.275,1.15,.115,M.frame,{s:false,r:0}));
   [-5.1,-4.55].forEach(x=>B(.012,.5,.012,x,1.15,.12,M.brass,{s:false,r:0}));
-  P(1.8,1.4,-4.0,.006,1.5,own(scaled(M.rug,1.8,1.4,1.8)),-PI/2,0);
-  B(.03,.6,.8,-5.98,1.6,-.1+.0,M.art2,{s:false});
+  fur(-4.0,1.5);  P(1.8,1.4,-4.0,.006,1.5,own(scaled(M.rug,1.8,1.4,1.8)),-PI/2,0);
+  fur(-6,-.1);  B(.03,.6,.8,-5.98,1.6,-.1+.0,M.art2,{s:false});
 
+  arch();
   /* ── common bath ── */
   const cbTile=tileMat('#dfe3df','#c2c8c3',.3,2.1,2.2,.3);
   P(2.08,2.2,-4.95,1.1,-2.29,cbTile,0,0);P(1.66,2.2,-5.99,1.1,-1.46,cbTile,0,PI/2);P(2.08,2.2,-4.95,1.1,-.63,cbTile,0,PI);
   P(.4,2.2,-3.91,1.1,-2.1,cbTile,0,-PI/2);P(.4,2.2,-3.91,1.1,-.8,cbTile,0,-PI/2);
-  B(.8,.15,.46,-4.4,.8,-2.06,lacquer,{r:.02});B(.82,.04,.48,-4.4,.89,-2.06,quartz,{r:.01});
+  fur(-4.4,-2.36);  B(.8,.15,.46,-4.4,.8,-2.06,lacquer,{r:.02});B(.82,.04,.48,-4.4,.89,-2.06,quartz,{r:.01});
   C(.15,.12,-4.4,.96,-2.08,ceramic,{r2:.12,seg:28});C(.012,.2,-4.4,1.0,-2.26,M.steel,{seg:8});
   B(.6,.75,.02,-4.4,1.6,-2.28,M.mirror,{s:false});
-  B(.36,.36,.52,-4.55,.44,-.92,ceramic,{r:.12});B(.34,.5,.12,-4.55,.62,-.7,ceramic,{r:.04});
-  B(1.66,2.0,.02,-5.45,1.0,-1.46,showerGlass,{s:false,r:0,ry:PI/2});
+  fur(-4.55,-.5);  B(.36,.36,.52,-4.55,.44,-.92,ceramic,{r:.12});B(.34,.5,.12,-4.55,.62,-.7,ceramic,{r:.04});
+  fur(-6,-1.46);  B(1.66,2.0,.02,-5.45,1.0,-1.46,showerGlass,{s:false,r:0,ry:PI/2});
   C(.12,.012,-5.6,2.2,-1.46,M.steel,{seg:24,s:false});
-  B(.4,.02,.02,-4.4,1.25,-.66,M.steel,{s:false});B(.36,.4,.04,-4.4,1.05,-.67,bed2M,{s:false,r:.02});
+  fur(-4.4,-.5);  B(.4,.02,.02,-4.4,1.25,-.66,M.steel,{s:false});B(.36,.4,.04,-4.4,1.05,-.67,bed2M,{s:false,r:.02});
 
+  arch();
   /* ── balcony: deck, glass rail, two chairs and planters ── */
   const BW=5.7,BD=1.8;
   P(BW,BD,0,-.01,Z1+BD/2+.06,own(scaled(M.deckPool,BW,BD,2.6)),-PI/2,0);
   B(BW,.14,BD,0,-.08,Z1+BD/2+.06,M.stone,{r:.004});
   B(BW,1.0,.02,0,.5,Z1+BD+.04,glassR,{s:false,r:0});B(BW,.06,.08,0,1.03,Z1+BD+.04,M.teak,{r:.012});
   [-1,1].forEach(s=>{B(.02,1.0,BD,s*BW/2,.5,Z1+BD/2+.06,glassR,{s:false,r:0});B(.06,.06,BD,s*BW/2,1.03,Z1+BD/2+.06,M.teak,{r:.012});});
-  C(.3,.04,.0,.52,Z1+1.0,M.teak,{seg:28});C(.03,.5,0,.25,Z1+1.0,M.steel,{seg:12});
+  fur(0,Z1+1);  C(.3,.04,.0,.52,Z1+1.0,M.teak,{seg:28});C(.03,.5,0,.25,Z1+1.0,M.steel,{seg:12});
   [-.8,.8].forEach(x=>{B(.5,.07,.5,x,.4,Z1+1.0,M.teak,{r:.025});B(.46,.09,.44,x,.47,Z1+1.0,M.linen,{r:.04});
     B(.5,.5,.07,x,.68,Z1+1.0+(x<0?-.24:-.24),M.teak,{r:.025,rx:-.18});});
-  plant(-2.4,Z1+1.4,.8,10,63,0x3f8a47,.17);plant(2.4,Z1+1.4,.55,8,64,0x5a9a44,.15);
+  fur(-2.4,Z1+1.4);plant(-2.4,Z1+1.4,.8,10,63,0x3f8a47,.17);fur(2.4,Z1+1.4);plant(2.4,Z1+1.4,.55,8,64,0x5a9a44,.15);
+  arch();
 
   flush();
   roomExterior(S,unit);
@@ -355,24 +387,24 @@ function buildFlat(api,unit){
   const sun=new THREE.DirectionalLight(0xffe9c8,3.0);
   sun.position.set(3.4,7.2,Z1+8.5);sun.target.position.set(-.5,.6,-1.5);
   sun.castShadow=true;sun.shadow.mapSize.set(LOW?1024:2048,LOW?1024:2048);
-  const c=sun.shadow.camera;c.left=-8;c.right=8;c.top=8;c.bottom=-7;c.near=1;c.far=34;
+  const c=sun.shadow.camera;c.left=-10;c.right=10;c.top=10;c.bottom=-9;c.near=1;c.far=34;
   sun.shadow.bias=-.0005;sun.shadow.normalBias=.03;sun.shadow.radius=4;
   S.add(sun,sun.target);
-  const skyFill=new THREE.RectAreaLight(0xcfe4f5,1.8,4.2,2.4);skyFill.position.set(0,1.4,Z1-.12);skyFill.lookAt(0,1.2,-2);S.add(skyFill);
-  const sideFill=new THREE.RectAreaLight(0xcfe4f5,1.0,1.8,1.5);sideFill.position.set(-4.2,1.6,Z1-.12);sideFill.lookAt(-4.2,1.2,0);S.add(sideFill);
-  const sideFill2=new THREE.RectAreaLight(0xcfe4f5,1.0,1.8,1.5);sideFill2.position.set(4.2,1.6,Z1-.12);sideFill2.lookAt(4.2,1.2,0);S.add(sideFill2);
+  const skyFill=new THREE.RectAreaLight(0xcfe4f5,1.8,4.2*K,2.4);skyFill.position.set(0,1.4,Z1-.12);skyFill.lookAt(0,1.2,-2);S.add(skyFill);
+  const sideFill=new THREE.RectAreaLight(0xcfe4f5,1.0,1.8,1.5);sideFill.position.set(-4.2*K,1.6,Z1-.12);sideFill.lookAt(-4.2*K,1.2,0);S.add(sideFill);
+  const sideFill2=new THREE.RectAreaLight(0xcfe4f5,1.0,1.8,1.5);sideFill2.position.set(4.2*K,1.6,Z1-.12);sideFill2.lookAt(4.2*K,1.2,0);S.add(sideFill2);
   const pts=[];
   /* [x, z, strength]: one warm light per room (the smaller rooms share on low-power devices) */
-  const lamps=[[0,1.2,1.6],[0,-2.9,1.4],[-4.2,-3.7,1.2],[4.2,1.5,1.2],[-4.2,1.5,1.1],[4.2,-3.7,.9],[4.95,-1.46,.7],[-4.95,-1.46,.7]];
+  const lamps=[[0,1.2,2.1],[0,-2.9,1.8],[-4.2,-3.7,1.6],[4.2,1.5,1.6],[-4.2,1.5,1.5],[4.2,-3.7,1.2],[4.95,-1.46,1.0],[-4.95,-1.46,1.0]];
   (LOW?lamps.slice(0,5):lamps).forEach(q=>{const p=new THREE.PointLight(0xffd3a4,q[2],7,2);p.userData.base=q[2];
-    p.position.set(q[0],RH-.15,q[1]);S.add(p);pts.push(p);});
-  const hem=new THREE.HemisphereLight(0xd8e8f2,0x6a5c48,.3);S.add(hem);
+    const w=ap(q[0],q[1]);p.position.set(w[0],RH-.15,w[1]);S.add(p);pts.push(p);});
+  const hem=new THREE.HemisphereLight(0xe2eef6,0x8a7656,.42);S.add(hem);
   S.environment=api.ENV();S.environmentIntensity=.35;
   S.userData.apply=(a,b,f)=>{
     const n=k=>a[k]+(b[k]-a[k])*f;
     sun.color.copy(a.rSun).lerp(b.rSun,f);sun.intensity=n('rSunI');
-    [skyFill,sideFill,sideFill2].forEach((l,i)=>{l.color.copy(a.rFill).lerp(b.rFill,f);l.intensity=n('rFillI')*(i?.55:1);});
-    hem.intensity=n('rHemi');S.environmentIntensity=n('rEnv');
+    [skyFill,sideFill,sideFill2].forEach((l,i)=>{l.color.copy(a.rFill).lerp(b.rFill,f);l.intensity=n('rFillI')*(i?.75:1.3);});
+    hem.intensity=n('rHemi')*1.5;S.environmentIntensity=n('rEnv');
     const k=n('rInt');pts.forEach(p=>p.intensity=p.userData.base*k);
     shade.emissiveIntensity=n('rShade');ledM.emissiveIntensity=.4+n('rShade')*1.4;downM.emissiveIntensity=.6+n('rShade')*1.8;
     const sk=S.userData.sky;sk.uniforms.t.value.copy(a.skyT).lerp(b.skyT,f);sk.uniforms.h.value.copy(a.skyH).lerp(b.skyH,f);
@@ -380,16 +412,17 @@ function buildFlat(api,unit){
 
   /* ── viewpoints, one per room: [camera position], [where it looks], field of view ── */
   S.userData.views={
-    Entry:{p:[4.6,1.62,-4.55],t:[-1.2,1.05,-2.0],fov:48},
-    Living:{p:[1.6,1.55,-.35],t:[-1.6,1.05,2.6],fov:44},
-    Dining:{p:[1.9,1.6,-.7],t:[-1.2,.85,-3.8],fov:42},
-    Kitchen:{p:[-2.75,1.62,-2.75],t:[-5.2,1.05,-4.6],fov:46},
-    Master:{p:[3.9,1.6,-.15],t:[5.8,.8,2.2],fov:52},
-    'Master Bath':{p:[4.8,1.62,-.74],t:[4.9,1.05,-2.3],fov:62},
-    'Bedroom 2':{p:[-5.6,1.6,.45],t:[-2.8,.85,2.4],fov:52},
-    Bathroom:{p:[-4.1,1.62,-.74],t:[-4.9,1.05,-2.3],fov:62},
-    Balcony:{p:[.3,1.55,3.0],t:[.4,1.0,6.4],fov:42},
-    View:{p:[.3,1.75,Z1+1.74],t:[.6,-1.6,Z1+4.4],fov:46}};
+    Entry:{p:[5.3,1.62,-4.75],t:[-1.2,1.0,-2.0],fov:68},
+    Living:{p:[1.8,1.62,-.7],t:[-1.6,1.0,2.6],fov:70},
+    Dining:{p:[1.6,1.65,-.25],t:[-1.2,.8,-3.8],fov:68},
+    Kitchen:{p:[-2.55,1.65,-2.5],t:[-5.2,1.0,-4.6],fov:72},
+    Master:{p:[3.9,1.65,-.2],t:[5.8,.8,2.2],fov:72},
+    'Master Bath':{p:[4.8,1.62,-.74],t:[4.9,1.0,-2.3],fov:80},
+    'Bedroom 2':{p:[-5.7,1.65,.4],t:[-2.8,.8,2.4],fov:72},
+    Bathroom:{p:[-4.1,1.62,-.74],t:[-4.9,1.0,-2.3],fov:80},
+    Balcony:{p:[.3,1.6,3.0],t:[.4,1.0,6.4],fov:60},
+    View:{p:[.3,1.75,Z1+1.74],t:[.6,-1.6,Z1+4.4],fov:58}};
+  Object.values(S.userData.views).forEach(v=>{[v.p,v.t].forEach(a=>{const w=ap(a[0],a[2]);a[0]=w[0];a[2]=w[1];});});
   return S;
 }
 window.AureliaFlat={buildFlat};

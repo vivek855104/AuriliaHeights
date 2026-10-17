@@ -2412,6 +2412,7 @@ function limits(m){
   camera.near=m==='room'?.05:.5;camera.updateProjectionMatrix();
   if(m==='resort'){c.minDistance=80;c.maxDistance=330;c.minPolarAngle=.22;c.maxPolarAngle=1.36;c.autoRotate=true;c.autoRotateSpeed=.32;}
   if(m==='building'){const d=curB&&curB.camD||60;c.minDistance=d*.4;c.maxDistance=d*1.7;c.minPolarAngle=.22;c.maxPolarAngle=1.42;}
+  if(m==='dollhouse'){c.minDistance=10;c.maxDistance=34;c.minPolarAngle=.3;c.maxPolarAngle=1.2;camera.near=.1;camera.updateProjectionMatrix();}
   if(m==='room'){c.minDistance=c.maxDistance=.012;c.enableZoom=false;c.rotateSpeed=-.32;
     c.minPolarAngle=.38;c.maxPolarAngle=2.5;}
 }
@@ -2481,6 +2482,7 @@ function enterRoom(no){
     document.head.appendChild(sc);
     return;}
   fade(()=>{
+    setDollhouse(false);
     curRoom={no:r[0],type:r[1],floor:r[2],side:r[3],b:curB};
     if(roomKey!==no){ if(room) disposeRoom(room);
       room=fullFlat(curRoom.type)?flatMod.buildFlat(FLAT_API,curRoom):buildRoom(curRoom); roomKey=no; }
@@ -2493,6 +2495,7 @@ function enterRoom(no){
 }
 function exitRoom(){
   fade(()=>{
+    setDollhouse(false);
     mode='building';curRoom=null;active=resort;applyTone();
     if(renderPass) renderPass.scene=resort;
     const v=buildingView(curB);
@@ -2512,10 +2515,12 @@ function viewFor(name){
   return v;
 }
 let curView='Entry';
+function setDollhouse(on){if(room&&room.userData.dollhouse)room.userData.dollhouse(on,renderer);else renderer.clippingPlanes=[];}
 function gotoView(name,instant){
   curView=name;
   const v=viewFor(name),p=new THREE.Vector3(...v.p),look=new THREE.Vector3(...v.t);
-  const t=p.clone().addScaledVector(look.clone().sub(p).normalize(),.012);
+  setDollhouse(!!v.orbit);limits(v.orbit?'dollhouse':'room');
+  const t=v.orbit?look:p.clone().addScaledVector(look.clone().sub(p).normalize(),.012);
   document.querySelectorAll('#views .chip').forEach(c=>
     c.setAttribute('aria-pressed',String(c.dataset.v===name)));
   if(instant||matchMedia('(prefers-reduced-motion:reduce)').matches){

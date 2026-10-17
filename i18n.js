@@ -30,7 +30,7 @@ const hi={
   /* room viewpoints */
   'Entry':'प्रवेश','Living':'लिविंग रूम','Dining':'डाइनिंग','Kitchen':'रसोई','Master':'मास्टर बेडरूम','Master Bath':'मास्टर बाथ',
   'Bedroom 2':'बेडरूम 2','Bathroom':'बाथरूम','Balcony':'बालकनी','View':'नज़ारा','Bed':'बिस्तर','Lounge':'लाउंज',
-  'Window':'खिड़की','Bath':'बाथ',
+  'Window':'खिड़की','Bath':'बाथ','Dollhouse':'डॉलहाउस',
   /* flat types */
   'Penthouse':'पेंटहाउस','4 BHK Sky Penthouse':'4 BHK स्काई पेंटहाउस',
   '2 bed · 2 bath':'2 बेडरूम · 2 बाथरूम','3 bed · 3 bath':'3 बेडरूम · 3 बाथरूम','4 bed · 5 bath':'4 बेडरूम · 5 बाथरूम',
@@ -103,7 +103,7 @@ const mr={
   'Entering':'प्रवेश','Taking you to the real experience':'तुम्हाला खऱ्या अनुभवाकडे घेऊन जात आहोत',
   'Entry':'प्रवेश','Living':'दिवाणखाना','Dining':'जेवणाची खोली','Kitchen':'स्वयंपाकघर','Master':'मास्टर बेडरूम','Master Bath':'मास्टर बाथ',
   'Bedroom 2':'बेडरूम 2','Bathroom':'स्नानगृह','Balcony':'बाल्कनी','View':'दृश्य','Bed':'पलंग','Lounge':'लाउंज',
-  'Window':'खिडकी','Bath':'बाथ',
+  'Window':'खिडकी','Bath':'बाथ','Dollhouse':'डॉलहाऊस',
   'Penthouse':'पेंटहाऊस','4 BHK Sky Penthouse':'4 BHK स्काय पेंटहाऊस',
   '2 bed · 2 bath':'2 बेडरूम · 2 बाथरूम','3 bed · 3 bath':'3 बेडरूम · 3 बाथरूम','4 bed · 5 bath':'4 बेडरूम · 5 बाथरूम',
   'Garden':'बाग','Garden and pool':'बाग आणि पूल','Open sky and the city':'मोकळे आकाश आणि शहर',

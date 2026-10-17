@@ -100,10 +100,14 @@ function buildFlat(api,unit){
 
   /* ── walls: axis-aligned slabs with openings [from, to, sill, head] measured along the wall ── */
   const TE=.2,TI=.12;
+  /* Dollhouse view: the flat seen from above with the ceiling lifted off and every wall cut at CUT, like an
+     architect's presentation model. The cut tops get solid caps (shown only in that view) */
+  const CUT=2.35,capM=std({color:0xf6f1e8,roughness:.9});
   function wall(axis,at,a0,a1,t,ops,mat){
     ops=(ops||[]).slice().sort((p,q)=>p[0]-q[0]);let u=a0;mat=mat||paint;
     const seg=(u0,u1,y0,y1)=>{if(u1-u0<.01||y1-y0<.01)return;const m=(u0+u1)/2,l=u1-u0,yc=(y0+y1)/2,h=y1-y0;
-      if(axis==='x')B(t,h,l,at,yc,m,mat,{r:0});else B(l,h,t,m,yc,at,mat,{r:0});};
+      if(axis==='x')B(t,h,l,at,yc,m,mat,{r:0});else B(l,h,t,m,yc,at,mat,{r:0});
+      if(y0<CUT&&y1>CUT){if(axis==='x')B(t+.004,.03,l,at,CUT-.016,m,capM,{r:0,s:false});else B(l,.03,t+.004,m,CUT-.016,at,capM,{r:0,s:false});}};
     ops.forEach(o=>{seg(u,o[0],0,RH);seg(o[0],o[1],0,o[2]);seg(o[0],o[1],o[3],RH);u=o[1];});seg(u,a1,0,RH);}
   /* exterior */
   wall('z',Z1,-6.2,6.2,TE,[[-5.1,-3.3,.9,2.4],[-2.2,2.2,0,2.62],[3.3,5.1,.9,2.4]]);
@@ -381,7 +385,10 @@ function buildFlat(api,unit){
   arch();
 
   flush();
+  const caps=G.children.find(m=>m.material===capM);if(caps)caps.visible=false;
+  const before=new Set(S.children);
   roomExterior(S,unit);
+  const outside=S.children.filter(o=>!before.has(o));
 
   /* ── light: sun through the garden glass, a sky fill at the slider, warm downlights in every room ── */
   const sun=new THREE.DirectionalLight(0xffe9c8,3.0);
@@ -423,6 +430,17 @@ function buildFlat(api,unit){
     Balcony:{p:[.3,1.6,3.0],t:[.4,1.0,6.4],fov:60},
     View:{p:[.3,1.75,Z1+1.74],t:[.6,-1.6,Z1+4.4],fov:58}};
   Object.values(S.userData.views).forEach(v=>{[v.p,v.t].forEach(a=>{const w=ap(a[0],a[2]);a[0]=w[0];a[2]=w[1];});});
+  /* the Dollhouse viewpoint is in final (enlarged) coordinates: a three-quarter view from above the garden-side
+     corner, the same distance-to-size and ~40 degree elevation as the owner's favourite Pool Deck shot */
+  S.userData.views=Object.assign({Dollhouse:{p:[-12.5,17,14.5],t:[0,.4,-1.2],fov:40,orbit:true}},S.userData.views);
+  /* switching the Dollhouse on lifts the ceiling, cuts the walls, hides the outside world and sets a studio backdrop */
+  const plane=new THREE.Plane(new THREE.Vector3(0,-1,0),CUT),studio=new THREE.Color(0x2e2b27);let saved=null;
+  S.userData.dollhouse=(on,renderer)=>{
+    if(on&&!saved){saved={bg:S.background,near:S.fog.near,far:S.fog.far};
+      outside.forEach(o=>o.visible=false);if(caps)caps.visible=true;
+      S.background=studio;S.fog.near=1e4;S.fog.far=1e5;renderer.clippingPlanes=[plane];}
+    else if(!on&&saved){outside.forEach(o=>o.visible=true);if(caps)caps.visible=false;
+      S.background=saved.bg;S.fog.near=saved.near;S.fog.far=saved.far;renderer.clippingPlanes=[];saved=null;}};
   return S;
 }
 window.AureliaFlat={buildFlat};

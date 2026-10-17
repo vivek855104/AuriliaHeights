@@ -2489,7 +2489,7 @@ function enterRoom(no){
     mode='room';active=room;applyLight(todK);
     if(renderPass) renderPass.scene=room;
     limits('room');tween=null;controls.enabled=true;
-    gotoView('Entry',true);paint();
+    gotoView(room.userData.views&&room.userData.views.Dollhouse?'Dollhouse':'Entry',true);paint();   // a flat with a Dollhouse opens on it
     requestAnimationFrame(()=>requestAnimationFrame(()=>hideVisit()));   // once the flat has drawn its first frame
   });
 }

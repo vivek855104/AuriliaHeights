@@ -64,6 +64,7 @@ function buildFlat(api,unit){
   const showerGlass=own(new THREE.MeshPhysicalMaterial({color:0xdfeceb,roughness:.05,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));
   const ledM=std({color:0xfff3df,emissive:0xffd9a6,emissiveIntensity:1.6,roughness:.6});
   const downM=std({color:0xfff6e8,emissive:0xffe2b8,emissiveIntensity:2.2,roughness:.6});
+  const goldGlow=std({color:0xffe2b0,emissive:0xffb54d,emissiveIntensity:.4,roughness:.35});
   const shade=own(new THREE.MeshStandardMaterial({color:0xf2e6d0,emissive:0xffc78a,emissiveIntensity:.2,roughness:.9,side:THREE.DoubleSide}));
   /* a canvas tile texture: square tiles with fine grout, repeated at a real size */
   function tileMat(color,grout,cell,w,h,rough){
@@ -125,7 +126,7 @@ function buildFlat(api,unit){
   wall('x',3.84,-2.36,-.5,TI);
   /* feature walls */
   B(.02,RH-.01,4,-2.29,RH/2,1.5,paintSage,{r:0,s:false});                    // living: behind the TV
-  B(3.56,RH-.01,.02,-4.21,RH/2,-.43,paintClay,{r:0,s:false});                // bedroom 2: behind the wardrobe line
+  B(2.38,RH-.01,.02,-4.8,RH/2,-.43,paintClay,{r:0,s:false});                 // bedroom 2: behind the wardrobe, clear of the doorway
   B(.02,RH-.01,4,6.0-.01,RH/2,1.5,paintSage,{r:0,s:false});                  // master: behind the bed
 
   /* skirting in the dry rooms */
@@ -384,6 +385,19 @@ function buildFlat(api,unit){
   fur(-2.4,Z1+1.4);plant(-2.4,Z1+1.4,.8,10,63,0x3f8a47,.17);fur(2.4,Z1+1.4);plant(2.4,Z1+1.4,.55,8,64,0x5a9a44,.15);
   arch();
 
+  /* ── golden lamps: brass fittings and glowing gold globes in every room, the ambience at night ── */
+  const globe=(x,y,z,r)=>add(new THREE.SphereGeometry(r,20,14),goldGlow,x,y,z,0,0,0,false);
+  const sconce=(x,y,z,ax)=>{ /* ax: which way the wall faces, +-1 along x or z */
+    if(Math.abs(ax[0]))B(.03,.26,.12,x,y,z,M.brass,{r:.01,s:false});else B(.12,.26,.03,x,y,z,M.brass,{r:.01,s:false});
+    globe(x+ax[0]*.12,y+.06,z+ax[1]*.12,.075);};
+  fur(0,-2.85);[-.55,0,.55].forEach(o=>{C(.004,RH-1.95,DX+o,(RH+1.95)/2,DZ,M.brass,{s:false,seg:4});
+    C(.06,.05,DX+o,1.98,DZ,M.brass,{seg:16});globe(DX+o,1.88,DZ,.1);});
+  fur(-2.36,1.5);[.35,2.65].forEach(z=>sconce(-2.28,1.85,z,[1,0]));
+  fur(6,1.55);[MBZ-1.25,MBZ+1.25].forEach(z=>sconce(5.93,1.75,z,[-1,0]));
+  fur(-2.36,1.55);sconce(-2.43,1.7,B2Z+.95,[-1,0]);
+  fur(4.2,-2.36);C(.07,.04,4.55,.97,-2.62,M.brass,{seg:16});C(.012,.2,4.55,1.08,-2.62,M.brass,{seg:8});globe(4.55,1.24,-2.62,.09);
+  fur(0,Z1+1);[-1.75,1.75].forEach(x=>{B(.22,.32,.22,x,.16,Z1+1.55,M.brass,{r:.02});globe(x,.42,Z1+1.55,.1);});
+  arch();
   flush();
   const caps=G.children.find(m=>m.material===capM);if(caps)caps.visible=false;
   const before=new Set(S.children);
@@ -407,14 +421,16 @@ function buildFlat(api,unit){
     const w=ap(q[0],q[1]);p.position.set(w[0],RH-.15,w[1]);S.add(p);pts.push(p);});
   const hem=new THREE.HemisphereLight(0xe2eef6,0x8a7656,.42);S.add(hem);
   S.environment=api.ENV();S.environmentIntensity=.35;
-  let dh=false,lastLight=null;
+  let dh=false,lastLight=null;const GOLD=new THREE.Color(0xffb862);
   S.userData.apply=(a,b,f)=>{
     lastLight=[a,b,f];
     const n=k=>a[k]+(b[k]-a[k])*f;
     sun.color.copy(a.rSun).lerp(b.rSun,f);sun.intensity=n('rSunI');
     [skyFill,sideFill,sideFill2].forEach((l,i)=>{l.color.copy(a.rFill).lerp(b.rFill,f);l.intensity=n('rFillI')*(i?.75:1.3);});
     hem.intensity=n('rHemi')*1.5;S.environmentIntensity=n('rEnv');
-    const k=n('rInt');pts.forEach(p=>p.intensity=p.userData.base*k);
+    const k=n('rInt'),nightK=Math.min(1,Math.max(0,(n('rShade')-.15)/1.65));
+    pts.forEach(p=>{p.intensity=p.userData.base*k*(1+.6*nightK);p.color.setHex(0xffd3a4).lerp(GOLD,nightK*.8);});
+    goldGlow.emissiveIntensity=.35+nightK*2.6;
     shade.emissiveIntensity=n('rShade');ledM.emissiveIntensity=.4+n('rShade')*1.4;downM.emissiveIntensity=.6+n('rShade')*1.8;
     const sk=S.userData.sky;sk.uniforms.t.value.copy(a.skyT).lerp(b.skyT,f);sk.uniforms.h.value.copy(a.skyH).lerp(b.skyH,f);
     S.fog.color.copy(a.fog).lerp(b.fog,f);

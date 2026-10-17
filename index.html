@@ -136,50 +136,107 @@ body.min #panel{transform:translateX(calc(100% + 30px));opacity:0;pointer-events
 body.min #popen{display:flex}
 body.min #popen{animation:rise .5s var(--ease)}
 
-/* panel content */
-#pc h1{font:400 40px/1.04 var(--f-disp);letter-spacing:-.018em;margin:24px 0 0;color:var(--ink);font-variation-settings:"opsz" 144}
-#pc .sub{margin-top:12px;font:500 9.5px/1 var(--f-ui);letter-spacing:.34em;color:var(--champ);text-transform:uppercase}
-#pc .rule{width:32px;height:1px;margin:24px 0;background:linear-gradient(90deg,var(--gold),transparent)}
-#pc .tag{font:italic 400 18px/1.42 var(--f-disp);margin:0 0 12px;color:var(--ink2);max-width:28ch;font-variation-settings:"opsz" 36}
-#pc p{margin:0 0 16px;line-height:1.72;font-size:13.5px;color:var(--mute);max-width:46ch}
-#pc h2{display:flex;align-items:center;gap:12px;font:500 9px/1 var(--f-ui);letter-spacing:.32em;color:var(--champ);margin:32px 0 8px;text-transform:uppercase}
-#pc h2:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
-.crumb{display:inline-flex;align-items:center;gap:6px;margin:16px 0 0 -8px;padding:6px 10px 6px 6px;border:0;border-radius:8px;background:transparent;
+/* panel content: a hero band, then distinct layers so each kind of information reads differently.
+   Figures are big serif numerals in tiles, choices are chips, places are cards, specifications are a table */
+#pc{--tile:rgba(255,226,170,.035);--tile-bd:rgba(214,180,112,.15);--tile-hi:rgba(255,226,170,.07)}
+#pc p{margin:0 0 16px;line-height:1.7;font-size:13.5px;color:#c4b8a2;max-width:46ch}
+/* the hero band carries a still of the loading screen's flow field, screened over the gold glass and
+   strongest toward the top-right corner, away from the type */
+#pc .hero{position:relative;overflow:hidden}
+#pc .hero:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--flow-art,none) center/cover no-repeat;
+  mix-blend-mode:screen;opacity:.9;
+  -webkit-mask-image:radial-gradient(160% 190% at 100% 0%,#000 35%,rgba(0,0,0,.55) 62%,rgba(0,0,0,.12) 92%);
+  mask-image:radial-gradient(160% 190% at 100% 0%,#000 35%,rgba(0,0,0,.55) 62%,rgba(0,0,0,.12) 92%)}
+#pc .hero>*{position:relative}
+#pc .hero{margin:-8px -26px 0;padding:28px 26px 24px;border-bottom:1px solid var(--line);
+  background:radial-gradient(120% 90% at 0% 0%,rgba(214,170,90,.16),transparent 62%),linear-gradient(180deg,rgba(255,226,170,.03),transparent)}
+#pc .eyebrow{display:flex;align-items:center;gap:8px;font:500 9.5px/1 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--champ)}
+#pc .eyebrow:before{content:"";width:6px;height:6px;transform:rotate(45deg);background:var(--gold);flex:none}
+#pc h1{font:400 40px/1.02 var(--f-disp);letter-spacing:-.02em;margin:14px 0 0;color:#f4ecdc;font-variation-settings:"opsz" 144}
+#pc .tag{font:italic 400 17px/1.42 var(--f-disp);margin:12px 0 0;color:var(--champ);max-width:30ch;font-variation-settings:"opsz" 36}
+#pc .lede{margin:20px 0 0}
+.crumb{display:inline-flex;align-items:center;gap:6px;margin:0 0 16px -8px;padding:6px 10px 6px 6px;border:0;border-radius:8px;background:transparent;
   font:500 10px var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);cursor:pointer;transition:background .3s,color .3s}
 .crumb:hover{background:var(--hover);color:var(--champ)}
 .crumb svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
-.stay{list-style:none;margin:0 -12px;padding:0}
-.stay li+li{position:relative}
-.stay li+li:before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--line)}
-.item{position:relative;display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 12px;border:0;border-radius:10px;
-  background:transparent;cursor:pointer;transition:background .35s var(--ease)}
-.item .mark{flex:none;align-self:stretch;width:1px;margin:4px 0;border-radius:1px;background:var(--line2);transition:background .35s,transform .35s var(--ease);transform:scaleY(.6)}
-.item .txt{flex:1;min-width:0}
-.item b{display:block;font:400 18px/1.2 var(--f-disp);color:var(--ink);letter-spacing:-.003em;transition:color .35s}
-.item small{display:block;margin-top:5px;font-size:11.5px;line-height:1.5;color:var(--mute);text-wrap:balance}
-.item .meta{flex:none;font:500 9.5px/1.3 var(--f-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-align:right;white-space:nowrap;transition:color .35s}
+
+/* key figures */
+.kpis{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:8px;margin:20px 0 0}
+.kpi{padding:14px 12px 12px;border:1px solid var(--tile-bd);border-radius:12px;background:var(--tile)}
+.kpi b{display:block;font:400 30px/1 var(--f-disp);letter-spacing:-.02em;color:#f4ecdc;font-variant-numeric:lining-nums;font-variation-settings:"opsz" 72}
+.kpi b small{font:400 15px var(--f-disp);color:var(--champ);margin-left:1px}
+.kpi span{display:block;margin-top:8px;font:500 8.5px/1.3 var(--f-ui);letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.kpi em{display:block;margin-top:3px;font:400 11px/1.3 var(--f-ui);font-style:normal;color:var(--faint)}
+.kpis.sm b{font-size:24px}
+.chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 0;padding:12px 14px;border:1px solid var(--tile-bd);border-radius:12px;background:var(--tile)}
+.chips>span:first-child{flex:1 0 100%;margin-bottom:4px;font:500 8.5px/1 var(--f-ui);letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.chip-s{padding:6px 11px;border:1px solid rgba(214,180,112,.3);border-radius:99px;font:500 11.5px/1 var(--f-ui);color:var(--ink);background:rgba(214,180,112,.06)}
+
+/* numbered section headers */
+#pc h2{display:flex;align-items:center;gap:10px;font:500 10px/1 var(--f-ui);letter-spacing:.28em;color:var(--ink2);margin:32px 0 12px;text-transform:uppercase}
+#pc h2 i{font:500 11px/1 "Oswald",var(--f-ui);font-style:normal;letter-spacing:.06em;color:var(--gold)}
+#pc h2:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+
+/* interactive cards and rows (keep the .item class: hover is synced with the tags in the scene) */
+.stay{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.stay.two{grid-template-columns:1fr 1fr}
+.item{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 12px 12px 12px;
+  border:1px solid var(--tile-bd);border-radius:12px;background:var(--tile);cursor:pointer;
+  transition:background .35s var(--ease),border-color .35s,transform .35s var(--ease),box-shadow .35s}
+.item:hover,.item.on,.item:focus-visible{background:var(--tile-hi);border-color:rgba(226,192,120,.5);transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.22)}
 .item .go{flex:none;width:14px;height:14px;fill:none;stroke:var(--champ);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;
-  opacity:0;transform:translateX(-4px);transition:opacity .35s,transform .35s var(--ease)}
-.item:hover,.item.on,.item:focus-visible{background:var(--sel)}
-.item:hover .mark,.item.on .mark,.item:focus-visible .mark{background:var(--gold);transform:none}
-.item:hover .meta,.item.on .meta{color:var(--champ)}
-.item:hover .go,.item.on .go,.item:focus-visible .go{opacity:1;transform:none}
-.rate{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:0 0 16px;font-size:12.5px;color:var(--mute)}
-.rate b{color:var(--ink);font:400 16px var(--f-disp)}
-.facts{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.facts div{padding:16px 0}
-.facts div:nth-child(odd){padding-right:14px;border-right:1px solid var(--line)}
-.facts div:nth-child(even){padding-left:18px}
-.facts div:nth-child(n+3){border-top:1px solid var(--line)}
-.facts dt{font:500 8.5px/1 var(--f-ui);letter-spacing:.28em;color:var(--faint);text-transform:uppercase;margin:0 0 8px}
-.facts dd{margin:0;font-size:13.5px;line-height:1.4;color:var(--ink);text-wrap:pretty}
-ul.am{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-ul.am li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12.5px;line-height:1.35;color:var(--ink2)}
-ul.am svg{flex:none;width:14px;height:14px;fill:none;stroke:var(--champ);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
-.rev{padding:16px 0;border-top:1px solid var(--line)}
-.rev:first-of-type{border-top:0;padding-top:4px}
-.rev p{margin:6px 0 0;font-size:13px}
-.rev b{font:500 9px/1 var(--f-ui);letter-spacing:.24em;text-transform:uppercase;color:var(--ink2)}
+  opacity:.45;transition:opacity .35s,transform .35s var(--ease)}
+.item:hover .go,.item.on .go,.item:focus-visible .go{opacity:1;transform:translateX(2px)}
+.item .txt{flex:1;min-width:0}
+.item b{display:block;font:400 16.5px/1.2 var(--f-disp);color:#f4ecdc;letter-spacing:-.005em}
+.item small{display:block;margin-top:4px;font-size:11.5px;line-height:1.45;color:var(--mute)}
+/* tower card: elevation sketch on top, name, then two figures */
+.item.tw{flex-direction:column;align-items:stretch;gap:0;padding:14px}
+.item.tw .elev{display:flex;align-items:flex-end;justify-content:space-between;height:64px;margin-bottom:12px}
+.item.tw svg.bld{height:100%;width:auto;overflow:visible}
+.item.tw svg.bld rect{fill:rgba(214,180,112,.08);stroke:rgba(214,180,112,.55);stroke-width:1}
+.item.tw svg.bld line{stroke:rgba(214,180,112,.28);stroke-width:1}
+.item.tw .idx{font:500 11px/1 "Oswald",var(--f-ui);letter-spacing:.06em;color:var(--gold)}
+.item.tw .figs{display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.item.tw .figs span{font:500 8.5px/1.4 var(--f-ui);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.item.tw .figs span strong{display:block;font:400 18px/1 var(--f-disp);letter-spacing:0;text-transform:none;color:var(--ink);margin-bottom:3px}
+.item.tw .go{position:absolute;right:12px;top:14px}
+/* icon tile for amenity rows and features */
+.ico{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(214,180,112,.25);
+  background:linear-gradient(160deg,rgba(214,170,90,.16),rgba(214,170,90,.04))}
+.ico svg{width:17px;height:17px;fill:none;stroke:var(--champ);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+/* sample flat card: a big floor number, then the flat, its type and size */
+.flr{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:52px;border-radius:10px;
+  border:1px solid rgba(214,180,112,.28);background:linear-gradient(160deg,rgba(214,170,90,.14),rgba(214,170,90,.03))}
+.flr b{font:400 20px/1 var(--f-disp)!important;color:#f4ecdc}
+.flr span{margin-top:4px;font:500 7.5px/1 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--champ)}
+.badge{display:inline-block;margin-left:6px;padding:3px 7px;border-radius:99px;vertical-align:3px;
+  font:600 8px/1 var(--f-ui);letter-spacing:.16em;text-transform:uppercase;color:#1a150d;background:var(--champ)}
+.badge.pent{background:linear-gradient(135deg,#e9cf94,#b8904a)}
+.badge.bhk2{background:rgba(214,180,112,.18);color:var(--champ);border:1px solid rgba(214,180,112,.35)}
+
+/* features: a two-column icon grid */
+ul.am{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ul.am li{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--tile-bd);border-radius:12px;background:var(--tile);
+  font-size:12px;line-height:1.35;color:var(--ink2)}
+ul.am .ico{width:32px;height:32px;border-radius:8px}ul.am .ico svg{width:15px;height:15px}
+/* fact tiles in the flat and tower views */
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:20px 0 0}
+.facts div{padding:12px 14px;border:1px solid var(--tile-bd);border-radius:12px;background:var(--tile)}
+.facts dt{font:500 8.5px/1 var(--f-ui);letter-spacing:.22em;color:var(--mute);text-transform:uppercase;margin:0 0 8px}
+.facts dd{margin:0;font:400 16px/1.25 var(--f-disp);color:#f4ecdc}
+.note-line{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 14px;border-radius:12px;border:1px dashed rgba(214,180,112,.25);
+  font-size:12px;color:var(--ink2)}
+.note-line svg{width:15px;height:15px;fill:none;stroke:var(--champ);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 0}
+/* specifications: a clean two-column table */
+.spec{display:grid;grid-template-columns:96px 1fr;border-top:1px solid var(--line)}
+.spec dt,.spec dd{margin:0;padding:12px 0;border-bottom:1px solid var(--line)}
+.spec dt{font:500 8.5px/1.6 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--champ)}
+.spec dd{font-size:12.5px;line-height:1.5;color:var(--ink2)}
+@media(min-width:860px) and (max-width:1100px){#pc .hero{margin:-8px -24px 0;padding:24px 24px 22px}}
+@media(max-width:859px){#pc .hero{margin:-4px -20px 0;padding:20px 20px 18px}#pc h1{font-size:32px}.kpi b{font-size:26px}.kpis.sm b{font-size:22px}}
+@media(max-width:360px){.stay.two{grid-template-columns:1fr}.kpis{gap:6px}.kpi{padding:12px 10px 10px}}
 
 /* ── loading and fallback ── */
 #fade{position:fixed;inset:0;background:#07090a;opacity:0;pointer-events:none;transition:opacity .45s;z-index:5}
@@ -241,8 +298,6 @@ ul.am svg{flex:none;width:14px;height:14px;fill:none;stroke:var(--champ);stroke-
   #crest span{font-size:8px;letter-spacing:.24em;overflow:hidden;text-overflow:ellipsis}
   .facts div:nth-child(even){padding-left:14px}.facts div:nth-child(odd){padding-right:12px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-#pc .crumb+.sub{margin-top:16px}
-#pc .sub+h1{margin-top:10px}
 #pc p.note{margin-top:24px;font-size:11px;line-height:1.55;color:var(--faint)}
 </style>
 </head>
@@ -553,6 +608,30 @@ function flowRenderer(canvas, w0, h0, dpr, raf) {
     removeEventListener('resize',onResize);removeEventListener('mousemove',onMove);document.removeEventListener('mouseleave',onLeave);
     if(worker)setTimeout(()=>worker.terminate(),100);});
   mo.observe(document.body,{childList:true});
+})();
+
+/* the same flow field, frozen as artwork for the panel's hero band: the renderer is stepped a few hundred
+   times without animating, then saved as one image and exposed as --flow-art. It is made in a worker while the
+   loading screen plays; browsers without OffscreenCanvas make it on the page once the scene is ready */
+(function(){
+  const src=document.getElementById('flow-src').textContent,W=400,H=280,N=420,D=2;
+  const done=blob=>document.documentElement.style.setProperty('--flow-art',`url("${URL.createObjectURL(blob)}")`);
+  const steps=`function freeze(c){let q=null;flowRenderer(c,${W},${H},${D},f=>{q=f;});
+    for(let i=0;i<${N};i++){const f=q;q=null;if(f)f();}}`;
+  if(window.Worker&&window.OffscreenCanvas&&OffscreenCanvas.prototype.convertToBlob){
+    try{
+      const w=new Worker(URL.createObjectURL(new Blob([`${src}
+${steps}
+        self.onmessage=async()=>{const c=new OffscreenCanvas(${W*D},${H*D});freeze(c);
+          self.postMessage(await c.convertToBlob({type:'image/png'}));self.close();};`],{type:'text/javascript'})));
+      w.onmessage=e=>done(e.data);w.postMessage(0);return;
+    }catch(e){}
+  }
+  const later=()=>{try{const c=document.createElement('canvas');new Function(`${src}
+${steps}
+return freeze;`)()(c);c.toBlob(b=>b&&done(b));}catch(e){}};
+  const wait=new MutationObserver(()=>{if(!document.getElementById('load')){wait.disconnect();setTimeout(later,1200);}});
+  wait.observe(document.body,{childList:true});
 })();
 </script>
 <div id="oops">This needs WebGL, which this browser has turned off.</div>
@@ -2436,9 +2515,19 @@ const AMI=[[/wi-?fi|internet|automation/i,'wifi'],[/gym|fitness/i,'gym'],[/yoga|
   [/bath|shower|changing/i,'shower'],[/video|door phone/i,'tv'],[/banquet|games|lounge|corner|living/i,'sofa']];
 const amIcon=a=>{const m=AMI.find(x=>x[0].test(a));
   return `<svg viewBox="0 0 16 16">${IC[m?m[1]:'leaf']}</svg>`;};
-const stayItem=b=>`<li><button class="item" data-b="${b.id}"><span class="mark"></span>
-  <span class="txt"><b>${b.name}</b><small>${b.sub}</small></span>
-  <span class="meta">${b.tower?homes(b)+' homes':'Amenity'}</span>${CHEVR}</button></li>`;
+/* a small elevation sketch of a tower, its height scaled to the floor count against the tallest tower */
+function elevSvg(b){
+  const maxF=Math.max(...BUILDINGS.filter(x=>x.tower).map(x=>x.floors)),h=60*b.floors/maxF,y0=64-h;
+  let lines='';for(let f=1;f<b.floors;f++){const y=(y0+f*h/b.floors).toFixed(1);lines+=`<line x1="4" x2="24" y1="${y}" y2="${y}"/>`;}
+  return `<svg class="bld" viewBox="0 0 28 64" aria-hidden="true"><rect x="4" y="${y0.toFixed(1)}" width="20" height="${h.toFixed(1)}" rx="1"/>${lines}`+
+    `<rect x="9" y="${(y0-3).toFixed(1)}" width="10" height="3"/></svg>`;}
+const towerCard=(b,i)=>`<li><button class="item tw" data-b="${b.id}">
+  <span class="elev">${elevSvg(b)}<span class="idx">${String(i+1).padStart(2,'0')}</span></span>
+  <b>${b.name}</b>
+  <span class="figs"><span><strong>${b.floors}</strong>Floors</span><span><strong>${homes(b)}</strong>Homes</span></span>${CHEVR}</button></li>`;
+const stayItem=b=>`<li><button class="item" data-b="${b.id}"><span class="ico">${amIcon(b.name+' '+b.sub)}</span>
+  <span class="txt"><b>${b.name}</b><small>${b.sub}</small></span>${CHEVR}</button></li>`;
+const sec=(n,t)=>`<h2><i>${String(n).padStart(2,'0')}</i>${t}</h2>`;
 
 function paint(){
   backBtn.style.display=mode==='resort'?'none':'flex';
@@ -2456,50 +2545,50 @@ function paint(){
 }
 function resortPanel(){
   const towers=BUILDINGS.filter(b=>b.tower),fac=BUILDINGS.filter(b=>!b.tower);
-  return `<h1>${PROJECT.name}</h1><div class="sub">${PROJECT.kind}</div><div class="rule"></div>
-  <p class="tag">${PROJECT.tag}</p>
-  <p>Fly around the site, pick a tower, then step inside a sample flat. The slider at the top takes the day into night.</p>
-  <dl class="facts">
-    <div><dt>Towers</dt><dd>${towers.length} (${towers.map(b=>b.floors).join(' and ')} floors)</dd></div>
-    <div><dt>Homes</dt><dd>${towers.reduce((s,b)=>s+homes(b),0)}</dd></div>
-    <div><dt>Configurations</dt><dd>2, 3 BHK and penthouses</dd></div>
-    <div><dt>Open space</dt><dd>About 70% of the site</dd></div>
-  </dl>
-  <h2>Towers</h2><ul class="stay">${towers.map(stayItem).join('')}</ul>
-  <h2>Amenities</h2><ul class="stay">${fac.map(stayItem).join('')}</ul>
+  return `<div class="hero"><div class="eyebrow">${PROJECT.kind}</div><h1>${PROJECT.name}</h1><p class="tag">${PROJECT.tag}</p></div>
+  <p class="lede">Fly around the site, pick a tower, then step inside a sample flat. The slider at the top takes the day into night.</p>
+  <div class="kpis">
+    <div class="kpi"><b>${String(towers.length).padStart(2,'0')}</b><span>Towers</span><em>${towers.map(b=>b.floors).join(' & ')} floors</em></div>
+    <div class="kpi"><b>${towers.reduce((s,b)=>s+homes(b),0)}</b><span>Homes</span><em>in two towers</em></div>
+    <div class="kpi"><b>70<small>%</small></b><span>Open space</span><em>of the site, approx.</em></div>
+  </div>
+  <div class="chips"><span>Configurations</span><span class="chip-s">2 BHK</span><span class="chip-s">3 BHK</span><span class="chip-s">Penthouses</span></div>
+  ${sec(1,'Towers')}<ul class="stay two">${towers.map(towerCard).join('')}</ul>
+  ${sec(2,'Amenities')}<ul class="stay">${fac.map(stayItem).join('')}</ul>
   <p class="note">Demo only: names and specifications are placeholders.</p>`;
 }
 function buildingPanel(){
-  const b=curB,head=`<button class="crumb" data-act="up">${CHEVL}Site</button>
-    <div class="sub">${PROJECT.name}</div><h1>${b.name}</h1><div class="rule"></div><p>${b.desc}</p>`;
-  if(!b.tower) return `${head}<h2>What is here</h2><ul class="am">${b.feat.map(a=>`<li>${amIcon(a)}${a}</li>`).join('')}</ul>`;
-  const list=`<ul class="stay">${b.rooms.map(([no,t,fl])=>`<li><button class="item" data-room="${no}"><span class="mark"></span>
-      <span class="txt"><b>Flat ${no}</b><small>${TYPES[t].name} · ${ord(fl)} floor · ${TYPES[t].carpet}</small></span>
+  const b=curB,head=`<div class="hero"><button class="crumb" data-act="up">${CHEVL}Site</button>
+    <div class="eyebrow">${PROJECT.name}</div><h1>${b.name}</h1></div><p class="lede">${b.desc}</p>`;
+  if(!b.tower) return `${head}${sec(1,'What is here')}<ul class="am">${b.feat.map(a=>`<li><span class="ico">${amIcon(a)}</span>${a}</li>`).join('')}</ul>`;
+  const list=`<ul class="stay">${b.rooms.map(([no,t,fl])=>`<li><button class="item" data-room="${no}">
+      <span class="flr"><b>${fl}</b><span>Floor</span></span>
+      <span class="txt"><b>Flat ${no}<span class="badge ${t}">${TYPES[t].short||TYPES[t].name}</span></b><small>${TYPES[t].name} · ${TYPES[t].carpet}</small></span>
       ${CHEVR}</button></li>`).join('')}</ul>`;
   return `${head}
-    <dl class="facts">
-      <div><dt>Floors</dt><dd>${b.floors} above the lobby</dd></div>
-      <div><dt>Homes</dt><dd>${homes(b)}, ${b.perFloor} per floor</dd></div>
-      <div><dt>Lifts</dt><dd>${b.lifts} high-speed</dd></div>
-      <div><dt>Faces</dt><dd>The central garden</dd></div>
-    </dl>
-    <h2>Sample flats you can walk into</h2>${list}`;
+    <div class="kpis sm" style="--n:4">
+      <div class="kpi"><b>${b.floors}</b><span>Floors</span></div>
+      <div class="kpi"><b>${homes(b)}</b><span>Homes</span></div>
+      <div class="kpi"><b>${b.lifts}</b><span>Lifts</span></div>
+      <div class="kpi"><b>${b.perFloor}</b><span>Per floor</span></div>
+    </div>
+    <div class="note-line"><svg viewBox="0 0 16 16">${IC.leaf}</svg>Faces the central garden · ${b.lifts} high-speed lifts</div>
+    ${sec(1,'Sample flats you can walk into')}${list}`;
 }
 function roomPanel(){
   const t=TYPES[curRoom.type];
-  return `<button class="crumb" data-act="up">${CHEVL}${curB.name}</button>
-  <div class="sub">${curB.name} · ${ord(curRoom.floor)} floor</div><h1>${t.name}</h1><div class="rule"></div>
-  <div class="rate"><b>Flat ${curRoom.no}</b><span>${t.config} · ${t.carpet} carpet</span></div>
-  <p>${t.desc}</p>
+  return `<div class="hero"><button class="crumb" data-act="up">${CHEVL}${curB.name}</button>
+    <div class="eyebrow">${curB.name} · ${ord(curRoom.floor)} floor</div><h1>${t.name}</h1>
+    <div class="pills"><span class="chip-s">Flat ${curRoom.no}</span><span class="chip-s">${t.config}</span><span class="chip-s">${t.carpet} carpet</span></div></div>
+  <p class="lede">${t.desc}</p>
   <dl class="facts">
     <div><dt>Carpet area</dt><dd>${t.carpet}${t.terrace?' + terrace':''}</dd></div>
     <div><dt>Layout</dt><dd>${t.config}</dd></div>
     <div><dt>Floor</dt><dd>${ord(curRoom.floor)} of ${curB.floors}</dd></div>
     <div><dt>Outlook</dt><dd>${t.view}</dd></div>
   </dl>
-  <h2>In this home</h2><ul class="am">${t.am.map(a=>`<li>${amIcon(a)}${a}</li>`).join('')}</ul>
-  <h2>Specifications</h2>
-  ${SPECS.map(s=>`<div class="rev"><b>${s[0]}</b><p>${s[1]}</p></div>`).join('')}
+  ${sec(1,'In this home')}<ul class="am">${t.am.map(a=>`<li><span class="ico">${amIcon(a)}</span>${a}</li>`).join('')}</ul>
+  ${sec(2,'Specifications')}<dl class="spec">${SPECS.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>
   <p class="note">You are standing in the master bedroom, with its attached bath and ${t.terrace?'private terrace':'balcony'}.</p>`;
 }
 pc.addEventListener('click',e=>{

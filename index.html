@@ -14,7 +14,7 @@
   --champ:#d3bf97;--gold:#b89a5e;--gold2:#8d7546;--gold-soft:rgba(211,191,151,.5);
   --line:rgba(211,191,151,.13);--line2:rgba(211,191,151,.22);
   --onaccent:#151a17;--hover:rgba(211,191,151,.06);--sel:rgba(211,191,151,.09);
-  --g-bg:rgba(20,25,22,.78);--g-bd:rgba(211,191,151,.17);
+  --g-bg:linear-gradient(158deg,rgba(52,41,24,.97) 0%,rgba(30,24,15,.97) 46%,rgba(19,16,11,.98) 100%);--g-bd:rgba(214,180,112,.3);
   --g-sh:0 22px 56px rgba(6,9,8,.32),0 1px 0 rgba(255,255,255,.04) inset;--blur:18px;
   --f-disp:"Fraunces",Georgia,serif;--f-ui:"Inter",system-ui,-apple-system,sans-serif;
   --ease:cubic-bezier(.22,.7,.2,1);--t:.38s;
@@ -22,9 +22,9 @@
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
 @supports(height:1dvh){:root{--ph:46dvh}}
 /* after dark the glass deepens a little so it sits quietly against the night sky */
-body.night{--g-bg:rgba(12,15,14,.8);--g-bd:rgba(211,191,151,.15);--g-sh:0 22px 56px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.035) inset}
+body.night{--g-bg:linear-gradient(158deg,rgba(42,33,19,.97) 0%,rgba(23,19,12,.98) 46%,rgba(13,11,8,.98) 100%);--g-bd:rgba(214,180,112,.26);--g-sh:0 22px 56px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.035) inset}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  :root{--g-bg:rgba(20,25,22,.96)}body.night{--g-bg:rgba(12,15,14,.97)}}
+  :root{--g-bg:linear-gradient(158deg,#342918,#1e180f 46%,#13100b)}body.night{--g-bg:linear-gradient(158deg,#2a2113,#17130c 46%,#0d0b08)}}
 *{box-sizing:border-box}
 html{height:100%}
 body{margin:0;height:100%;overflow:hidden;background:#0a0c0b;color:var(--ink);font-family:var(--f-ui);
@@ -43,21 +43,35 @@ button{font:inherit;color:inherit}
 #topbar{display:flex;gap:12px;align-items:flex-start;margin:calc(env(safe-area-inset-top,0px) + 18px) 18px 0;pointer-events:none}
 #topbar>*,#views>*{pointer-events:auto}
 
-/* ── wayfinding labels ── */
-.lbl{position:absolute;transform:translate(-50%,calc(-100% - 12px));pointer-events:auto;border:1px solid rgba(211,191,151,.24);
-  border-radius:8px;padding:6px 14px 7px;background:rgba(18,23,20,.74);color:var(--ink);text-align:center;
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  box-shadow:0 6px 18px rgba(6,9,8,.22);cursor:pointer;white-space:nowrap;
-  transition:transform .35s var(--ease),box-shadow .35s,background .35s,border-color .35s,opacity .9s}
-.lbl:before{content:"";position:absolute;left:16px;right:16px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent)}
-.lbl:after{content:"";position:absolute;left:50%;top:100%;width:1px;height:11px;background:linear-gradient(rgba(211,191,151,.6),transparent)}
-.lbl b{display:block;font-family:var(--f-disp);font-weight:400;font-size:13.5px;line-height:1.2;letter-spacing:.01em;color:var(--ink)}
-.lbl span{display:block;margin-top:3px;font:500 8px/1 var(--f-ui);letter-spacing:.28em;text-transform:uppercase;color:var(--champ);opacity:.85}
-.lbl:hover,.lbl.on{transform:translate(-50%,calc(-100% - 12px)) scale(1.03);border-color:rgba(211,191,151,.5);background:rgba(18,23,20,.88);
-  box-shadow:0 10px 26px rgba(6,9,8,.3)}
-body.night .lbl{background:rgba(12,15,14,.76)}
-body.night .lbl:hover,body.night .lbl.on{background:rgba(12,15,14,.9)}
+/* ── wayfinding tags: an architectural marker. A gold diamond sits on the building, a hairline leader rises to a
+   slim glass plate carrying an index numeral, the name and, on wider screens, a line of detail. --lift lengthens
+   the leader when a tag is raised clear of a neighbour (placeLabels) ── */
+.lbl{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;
+  padding:0;border:0;background:none;color:var(--ink);cursor:pointer;--stem:24px;--lift:0px;transition:opacity .9s}
+.lbl .tag{position:relative;display:flex;align-items:stretch;gap:10px;padding:7px 14px 8px 10px;white-space:nowrap;
+  background:linear-gradient(158deg,rgba(52,41,24,.95),rgba(22,18,12,.95));border:1px solid rgba(214,180,112,.32);border-radius:3px;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 26px rgba(6,9,8,.24);
+  transition:border-color .35s,background .35s,transform .45s var(--ease),box-shadow .45s}
+.lbl .tag:before{content:"";position:absolute;left:10px;right:40%;top:-1px;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+.lbl i{display:flex;align-items:center;padding-right:10px;border-right:1px solid rgba(211,191,151,.22);
+  font:500 11px/1 "Oswald",var(--f-ui);font-style:normal;letter-spacing:.08em;color:var(--gold)}
+.lbl .txt{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px}
+.lbl b{font:400 13.5px/1.1 var(--f-disp);letter-spacing:.005em;color:var(--ink)}
+.lbl span{font:500 7.5px/1 var(--f-ui);letter-spacing:.3em;text-transform:uppercase;color:var(--champ);opacity:.8}
+.lbl .stem{width:1px;height:max(0px,calc(var(--stem) + var(--lift)));background:linear-gradient(rgba(211,191,151,.75),rgba(211,191,151,.18))}
+.lbl .pin{width:7px;height:7px;margin:-1px 0 -3.5px;transform:rotate(45deg);border:1px solid var(--champ);background:#1e180f;
+  box-shadow:0 0 0 3px rgba(211,191,151,.1);transition:background .35s,box-shadow .35s}
+.lbl:hover .tag,.lbl.on .tag{transform:translateY(-2px);border-color:rgba(226,192,120,.65);background:linear-gradient(158deg,rgba(64,50,28,.98),rgba(26,21,13,.98));box-shadow:0 14px 30px rgba(6,9,8,.32)}
+.lbl:hover .pin,.lbl.on .pin{background:var(--gold);box-shadow:0 0 0 4px rgba(211,191,151,.18)}
+.lbl:focus-visible{outline:none}.lbl:focus-visible .tag{outline:1px solid var(--champ);outline-offset:2px}
+body.night .lbl .tag{background:linear-gradient(158deg,rgba(42,33,19,.95),rgba(15,13,9,.95))}
+body.night .lbl:hover .tag,body.night .lbl.on .tag{background:linear-gradient(158deg,rgba(56,44,25,.98),rgba(20,17,11,.98))}
 body.intro .lbl{opacity:0;pointer-events:none}
+/* smaller screens: the detail line goes, then the plate and type tighten so tags never blanket the view */
+@media(max-width:859px){.lbl{--stem:14px}.lbl .tag{gap:8px;padding:5px 10px 6px 8px;box-shadow:0 6px 16px rgba(6,9,8,.22)}
+  .lbl i{font-size:9.5px;padding-right:8px}.lbl b{font-size:11.5px}.lbl span{display:none}}
+@media(max-width:520px){.lbl{--stem:10px}.lbl .tag{gap:6px;padding:4px 8px 5px 6px;border-radius:2px}.lbl .tag:before{left:6px}
+  .lbl i{font-size:8.5px;padding-right:6px}.lbl b{font-size:10.5px}.lbl .pin{width:5px;height:5px;margin-bottom:-2.5px}}
 
 /* ── brand, back, time of day ── */
 #back{display:none;align-items:center;gap:8px;height:46px;padding:0 16px 0 12px;border-radius:12px;cursor:pointer;
@@ -1651,10 +1665,10 @@ function contextCity(S){
     trees.push([x,s*1.15,z,0,r()*6,0,s,s*(1+r()*.3),s]);tcol.push(GR[(r()*GR.length)|0]);};
   ZS.forEach(z=>{roads.push([0,-.02,z,-PI/2,0,0,2*lim,RW,1]);
     for(let x=-lim;x<=lim;x+=32)lamps.push([x,5,z-RW/2-1]);
-    for(let x=-lim;x<=lim;x+=13)if(r()<.6){tree(x+r()*4,z-RW/2-3.2,1.6+r()*.9);tree(x+r()*4,z+RW/2+3.2,1.6+r()*.9);}});
+    for(let x=-lim;x<=lim;x+=26)if(r()<.3){tree(x+r()*4,z-RW/2-3.2,1.6+r()*.9);tree(x+r()*4,z+RW/2+3.2,1.6+r()*.9);}});
   XS.forEach(x=>{roads.push([x,-.021,0,-PI/2,0,0,RW,2*lim,1]);
     for(let z=-lim;z<=lim;z+=32)lamps.push([x+RW/2+1,5,z]);
-    for(let z=-lim;z<=lim;z+=13)if(r()<.6&&Math.abs(z-STREET)>12){tree(x-RW/2-3.2,z+r()*4,1.6+r()*.9);tree(x+RW/2+3.2,z+r()*4,1.6+r()*.9);}});
+    for(let z=-lim;z<=lim;z+=26)if(r()<.3&&Math.abs(z-STREET)>12){tree(x-RW/2-3.2,z+r()*4,1.6+r()*.9);tree(x+RW/2+3.2,z+r()*4,1.6+r()*.9);}});
   instance(new THREE.PlaneGeometry(1,1),roadM,roads,S,false);
   emitIf(new THREE.SphereGeometry(.22,8,6),M.lampGlow,lamps,S,false);
   /* bridges where the cross streets meet the river */
@@ -1662,7 +1676,7 @@ function contextCity(S){
 
   /* a park belt around the compound wall, planted in loose clusters */
   slab(250,STREET-8.5+225,0,(STREET-8.5-225)/2,-.03,parkM,S,[2*CX,CZ1-CZ0,0,(CZ0+CZ1)/2]);
-  for(let i=0;i<420;i++){const x=(r()-.5)*240,z=-223+r()*(STREET-8+213);
+  for(let i=0;i<90;i++){const x=(r()-.5)*240,z=-223+r()*(STREET-8+213);
     if(Math.abs(x)<CX+5&&z>CZ0-5&&z<CZ1+5)continue;tree(x,z,1.8+r()*1.4);}
 
   /* blocks: each cell between streets is cut into strips and lots; a few cells become parks */
@@ -1674,8 +1688,8 @@ function contextCity(S){
     if(x1-x0<16||z1-z0<16)continue;
     const cx=(x0+x1)/2,cz=(z0+z1)/2;
     if(x0>-150&&x1<150&&z0>-235&&z1<STREET)continue;                 // the site and its park belt
-    if(r()<.13){slab(x1-x0,z1-z0,cx,cz,-.03,parkM,S);                  // a pocket park
-      for(let k=0;k<(x1-x0)*(z1-z0)/220;k++)tree(x0+r()*(x1-x0),z0+r()*(z1-z0),1.8+r()*1.6);continue;}
+    if(r()<.08){slab(x1-x0,z1-z0,cx,cz,-.03,parkM,S);                  // a pocket park
+      for(let k=0;k<(x1-x0)*(z1-z0)/900;k++)tree(x0+r()*(x1-x0),z0+r()*(z1-z0),1.8+r()*1.6);continue;}
     const far=Math.min(1,Math.max(0,(Math.hypot(cx,cz)-260)/400));
     const alongX=x1-x0>z1-z0,L=alongX?x1-x0:z1-z0,D=alongX?z1-z0:x1-x0;
     const strips=D>60?3:2;
@@ -1845,7 +1859,8 @@ function buildResort(){
   // labels
   BUILDINGS.forEach(b=>{
     const el=document.createElement('button');el.className='lbl';
-    el.innerHTML=`<b>${b.name}</b><span>${b.tower?b.floors+' floors · '+homes(b)+' homes':'Amenity'}</span>`;
+    el.innerHTML=`<div class="tag"><i>${String(BUILDINGS.indexOf(b)+1).padStart(2,'0')}</i><div class="txt"><b>${b.name}</b>`+
+      `<span>${b.tower?b.floors+' floors · '+homes(b)+' homes':'Amenity'}</span></div></div><div class="stem"></div><div class="pin"></div>`;
     el.onclick=()=>enterBuilding(b.id);
     el.onmouseenter=()=>setHover(b.id);el.onmouseleave=()=>setHover(null);
     document.getElementById('labels').appendChild(el);
@@ -2563,19 +2578,39 @@ function resize(){
   if(shift>.2)camera.setViewOffset(VW,VH,shift,0,VW,VH);else{shift=0;camera.clearViewOffset();}
   camera.updateProjectionMatrix();
   if(composer) composer.setSize(VW,VH);
+  resetLabelSizes();
 }
 new ResizeObserver(resize).observe(stage);
 const v3=new THREE.Vector3(), clock=new THREE.Clock();
+/* tags are placed nearest-first; a tag whose plate would overlap one already placed is lifted just clear of it,
+   and its leader line grows so it still points at its building. Sizes are measured once and reset on resize */
+let labelMinTop=0;   // tags never rise under the brand badge and the time-of-day control
+function resetLabelSizes(){BUILDINGS.forEach(b=>{if(b.el)b.el._w=0;});
+  const tb=document.getElementById('topbar');labelMinTop=tb?tb.getBoundingClientRect().bottom+8:0;}
+if(document.fonts)document.fonts.ready.then(resetLabelSizes);
 function placeLabels(){
+  const vis=[];
   BUILDINGS.forEach(b=>{
     const el=b.el; if(!el) return;
     if(mode!=='resort'){el.style.display='none';return;}
     v3.set(b.pos[0],b.labelY,b.pos[2]).project(camera);
     if(v3.z>1){el.style.display='none';return;}
-    el.style.display='block';
-    el.style.left=((v3.x+1)/2*VW)+'px';
-    el.style.top=((1-v3.y)/2*VH)+'px';
+    if(el.style.display!=='flex'){el.style.display='flex';el._w=0;}
+    vis.push({el,x:(v3.x+1)/2*VW,y:(1-v3.y)/2*VH,z:v3.z});
   });
+  vis.sort((a,b)=>a.z-b.z);
+  const placed=[];
+  vis.forEach(t=>{const el=t.el;
+    if(!el._w){el.style.setProperty('--lift','0px');el._w=el.offsetWidth;el._h=el.offsetHeight;el._t=el.firstChild.offsetHeight;el._s=el.children[1].offsetHeight;}
+    const top0=t.y-el._h;let lift=0,drop=0;
+    for(let n=0;n<6;n++){const L=t.x-el._w/2,R=t.x+el._w/2,T=top0-lift,B=T+el._t;
+      const hit=placed.find(q=>L<q.R+6&&R>q.L-6&&T<q.B+6&&B>q.T-6);if(!hit)break;
+      lift=top0+el._t-hit.T+6;}
+    if(top0-lift<labelMinTop){const d=labelMinTop-top0;     // no room above: shorten the leader, then sit lower still
+      if(d<=el._s)lift=-d;else{lift=-el._s;drop=d-el._s;}}
+    placed.push({L:t.x-el._w/2,R:t.x+el._w/2,T:top0-lift,B:top0-lift+el._t});
+    el.style.setProperty('--lift',lift.toFixed(1)+'px');
+    el.style.left=t.x+'px';el.style.top=(t.y+drop)+'px';});
 }
 function loop(){
   requestAnimationFrame(loop);

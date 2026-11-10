@@ -664,6 +664,7 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {Reflector} from 'three/addons/objects/Reflector.js';
+import {RGBELoader} from 'three/addons/loaders/RGBELoader.js';
 
 /* ═══════════════ data ═══════════════ */
 /* A placeholder project: every name, price and specification below is illustrative. Edit them here. */
@@ -947,6 +948,28 @@ controls.enableDamping=true;controls.dampingFactor=.07;controls.enablePan=false;
 
 /* ═══════════════ materials ═══════════════ */
 const M={};
+/* photographic CC0 texture sets (Poly Haven, 1K): colour, OpenGL normal, and one packed map with ambient occlusion
+   in red and roughness in green, which is where three.js reads each. Loaded over http(s) on desktop; a page opened
+   straight from disk (Chrome refuses file:// images as textures) or a phone keeps the generated textures */
+const PHOTO_TEX=location.protocol!=='file:'&&!LOW;
+async function photoSet(name,detailOnly){
+  const L=new THREE.TextureLoader(),get=f=>L.loadAsync(`assets/tex/${name}_${f}.jpg`);
+  const [map,nrm,arm]=await Promise.all([detailOnly?null:get('diff'),get('nor'),get('arm')]);
+  [map,nrm,arm].forEach(t=>{if(t){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=MAXA;}});
+  if(map)map.colorSpace=THREE.SRGBColorSpace;
+  const set={normalMap:nrm,roughnessMap:arm,aoMap:arm};if(map)set.map=map;return set;}
+async function upgradeMaterials(){
+  if(!PHOTO_TEX)return;
+  const timeout=new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),15000));
+  try{
+    /* no CC0 grass reads as a green lawn, so the lawn keeps its generated colour and takes only the photo's surface detail */
+    const [brk,asp,grs,til]=await Promise.race([Promise.all([photoSet('red_brick'),photoSet('asphalt_02'),photoSet('leafy_grass',true),photoSet('large_floor_tiles_02')]),timeout]);
+    const use=(m,set,o)=>{Object.assign(m,set,{roughness:1,aoMapIntensity:1},o||{});m.needsUpdate=true;};
+    BUILDINGS.filter(b=>b.tower).forEach(b=>use(M['brick'+b.id],brk,{normalScale:new THREE.Vector2(.8,.8)}));
+    use(M.asphalt,asp,{normalScale:new THREE.Vector2(.7,.7)});
+    use(M.grass,grs,{normalScale:new THREE.Vector2(.6,.6)});
+    use(M.paving,til,{color:new THREE.Color(0xf6dcb2),normalScale:new THREE.Vector2(.7,.7)});
+  }catch(e){console.warn('Photo textures unavailable, keeping the generated ones:',e.message);}}
 async function buildMaterials(){
   const S=LOW?512:1024;
   await step('milling the oak',.06);
@@ -1352,7 +1375,7 @@ function slab(w,d,cx,cz,y,mat,parent,hole){
 /* clone of a tiled material whose texture repeat matches a real size in metres */
 function scaled(mat,w,d,cell){
   const m=mat.clone();
-  ['map','normalMap','roughnessMap'].forEach(k=>{if(mat[k]){
+  ['map','normalMap','roughnessMap','aoMap'].forEach(k=>{if(mat[k]){
     m[k]=mat[k].clone();m[k].repeat.set(w/cell,d/cell);m[k].needsUpdate=true;}});
   return m;}
 function pave(w,d,x,z,y,parent,base,cell){
@@ -2342,6 +2365,14 @@ function buildComposer(scene){
 
 /* ═══════════════ state machine ═══════════════ */
 let ENV=null;
+/* HDRI skies (Poly Haven, CC0, 1K): they light reflections and ambient colour on the site */
+const ENV_SKY={day:null,night:null,loading:{},pmrem:null,fallback:null};
+const HDRI={day:'sunny_vondelpark',night:'moonlit_golf'};
+function loadSky(k){
+  if(ENV_SKY[k]||ENV_SKY.loading[k]||!ENV_SKY.pmrem)return ENV_SKY.loading[k];
+  return ENV_SKY.loading[k]=new RGBELoader().loadAsync(`assets/hdri/${HDRI[k]}_1k.hdr`).then(t=>{
+    ENV_SKY[k]=ENV_SKY.pmrem.fromEquirectangular(t).texture;t.dispose();applyLight(todK);
+  }).catch(e=>console.warn('HDRI unavailable:',e.message));}
 let mode='resort', curB=null, curRoom=null, tween=null, active=resort;
 let skyMat=null, sunLight=null, hemi=null, starField=null, moonMesh=null, todK=.5, resortExposure=1.12, roomExposure=1.0;
 const NIGHT_LIGHTS=[];
@@ -2372,6 +2403,11 @@ function applyLight(k){
   sunLight.position.set(n('sunX'),n('sunY'),n('sunZ')).normalize().multiplyScalar(150);
   mixCol(hemi.color,'hemiS',a,b,f);mixCol(hemi.groundColor,'hemiG',a,b,f);hemi.intensity=n('hemiI');
   resort.environmentIntensity=n('env');
+  /* with an HDRI the environment carries the ambient light, so the flat hemisphere fill steps back */
+  const night=todK>.62,sky=night?ENV_SKY.night:ENV_SKY.day;
+  if(night&&!ENV_SKY.night)loadSky('night');
+  resort.environment=sky||ENV_SKY.fallback||resort.environment;
+  if(sky){hemi.intensity*=.55;resort.environmentIntensity*=night?1.4:.75;}
   const st=n('stars');starField.visible=st>.02;starField.material.opacity=.9*st;
   moonMesh.visible=st>.02;moonMesh.material.opacity=st;
   const g=n('glow');NIGHT_LIGHTS.forEach(l=>{l.intensity=l.userData.base*g;l.visible=g>.02;});
@@ -2794,12 +2830,17 @@ function loop(){
   try{
     await step('surveying the site',.03);
     await buildMaterials();
+    await upgradeMaterials();
     await step('raising the towers',.76);
     buildResort();
     await step('planting the garden',.88);
     const pmrem=new THREE.PMREMGenerator(renderer);
     ENV=pmrem.fromScene(new RoomEnvironment(),.04).texture;
-    resort.environment=pmrem.fromScene(skyEnvScene(),.02).texture;
+    resort.environment=pmrem.fromScene(skyEnvScene(),.02).texture;     // fallback until the HDRI arrives
+    ENV_SKY.fallback=resort.environment;
+    if(location.protocol!=='file:'){
+      ENV_SKY.pmrem=pmrem;
+      await Promise.race([loadSky('day'),new Promise(r=>setTimeout(r,8000))]);}
     buildComposer(resort);
     applyLight(todK);
     if(location.search.includes('dev')) window.__dbg={camera,controls,THREE,applyLight,enterBuilding,enterRoom,gotoView,get room(){return room;}};
